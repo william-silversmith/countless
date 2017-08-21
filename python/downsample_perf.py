@@ -167,6 +167,40 @@ def downgrade_type(arr):
   
   return arr
 
+def odd_to_even(image):
+  """
+  To facilitate 2x2 downsampling segmentation, change an odd sized image into an even sized one.
+  Works by mirroring the starting 1 pixel edge of the image on odd shaped sides.
+
+  e.g. turn a 3x3x5 image into a 4x4x5 (the x and y are what are getting downsampled)
+  
+  For example: [ 3, 2, 4 ] => [ 3, 3, 2, 4 ] which is now easy to downsample.
+
+  """
+  shape = np.array(image.shape)
+
+  offset = (shape % 2)[:2] # x,y offset
+  
+  # detect if we're dealing with an even
+  # image. if so it's fine, just return.
+  if not np.any(offset): 
+    return image
+
+  oddshape = image.shape[:2] + offset
+  oddshape = np.append(oddshape, shape[2:])
+  oddshape = oddshape.astype(int)
+
+  newimg = np.empty(shape=oddshape, dtype=image.dtype)
+
+  ox,oy = offset
+  sx,sy = oddshape
+
+  newimg[0,0] = image[0,0] # corner
+  newimg[ox:sx,0] = image[:,0] # x axis line
+  newimg[0,oy:sy] = image[0,:] # y axis line 
+
+  return newimg
+
 def counting(array):
     factor = (2, 2, 1)
     shape = array.shape
