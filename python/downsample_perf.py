@@ -14,7 +14,7 @@ import random
 import sys
 import time
 from tqdm import tqdm
-
+from scipy import ndimage
 
 def simplest_countless(data):
   """
@@ -230,6 +230,10 @@ def counting(array):
     
     return np.squeeze(output)
 
+def ndzoom(array):
+    ratio=(1/2.0, 1/2.0)
+    return ndimage.interpolation.zoom(array, ratio, order=1)
+
 def countless_if(array):
     factor = (2, 2, 1)
     shape = array.shape
@@ -337,7 +341,8 @@ methods = [
   downsample_with_max_pooling,
   striding,
   countless_if,
-  counting
+  counting,
+  ndzoom
 ]
 
 formats = {
