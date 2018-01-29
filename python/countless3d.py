@@ -7,6 +7,7 @@ import math
 import random
 import sys
 from collections import defaultdict
+from copy import deepcopy
 from itertools import combinations
 from functools import reduce
 from tqdm import tqdm
@@ -179,33 +180,106 @@ def countless_generalized(data, factor):
 
   def logical_or(x,y):
     return x + (x == 0) * y
-  
+
   result = [ pick(combo) for combo in combinations(sections, majority)  ]
   result = reduce(logical_or, result)
-  for i in range(majority - 1, 2, -1):
+  for i in range(majority - 1, 3-1, -1): # 3-1 b/c of exclusive bounds
     partial_result = [ pick(combo) for combo in combinations(sections, i)  ]
-    parital_result = reduce(logical_or, result)
-    result = result + (result == 0) * parital_result
+    partial_result = reduce(logical_or, partial_result)
+    result = result + (result == 0) * partial_result
 
   partial_result = [ pick(combo) for combo in combinations(sections[:-1], 2)  ]
-  parital_result = reduce(logical_or, result)
-  result = result + (result == 0) * parital_result
+  partial_result = reduce(logical_or, partial_result)
+  result = result + (result == 0) * partial_result
 
   return result + (result == 0) * sections[-1] - 1
 
-block = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
+def test(fn):
+  alldifferent = [
+    [
+      [1,2],
+      [3,4],
+    ],
+    [
+      [5,6],
+      [7,8]
+    ]
+  ]
+  allsame = [
+    [
+      [1,1],
+      [1,1],
+    ],
+    [
+      [1,1],
+      [1,1]
+    ]
+  ]
 
-start = time.clock()
-ct = 2
-for _ in tqdm(range(ct)):
-  dynamic_countless3d(block)
-  # countless3d(block)
-  # countless_generalized(block, (2,2,2))
-end = time.clock()
+  assert fn(np.array(alldifferent)) == [[[8]]]
+  assert fn(np.array(allsame)) == [[[1]]]
 
-sec = end - start
-mpx = ct * (block.shape[0] * block.shape[1] * block.shape[2]) / sec / 1e6
-print("{}\t{}".format(sec, mpx))
+  twosame = deepcopy(alldifferent)
+  twosame[1][1][0] = 2
+
+  assert fn(np.array(twosame)) == [[[2]]]
+
+  threemixed = [
+    [
+      [3,3],
+      [1,2],
+    ],
+    [
+      [2,4],
+      [4,3]
+    ]
+  ]
+  assert fn(np.array(threemixed)) == [[[3]]]
+
+  foursame = [
+    [
+      [4,4],
+      [1,2],
+    ],
+    [
+      [2,4],
+      [4,3]
+    ]
+  ]
+
+  assert fn(np.array(foursame)) == [[[4]]]
+
+  fivesame = [
+    [
+      [5,4],
+      [5,5],
+    ],
+    [
+      [2,4],
+      [5,5]
+    ]
+  ]
+
+  assert fn(np.array(fivesame)) == [[[5]]]
+
+test(countless3d)
+test(dynamic_countless3d)
+test(lambda x: countless_generalized(x, (2,2,2)))
+
+
+# block = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
+
+# start = time.clock()
+# ct = 2
+# for _ in tqdm(range(ct)):
+#   dynamic_countless3d(block)
+#   # countless3d(block)
+#   # countless_generalized(block, (2,2,2))
+# end = time.clock()
+
+# sec = end - start
+# mpx = ct * (block.shape[0] * block.shape[1] * block.shape[2]) / sec / 1e6
+# print("{}\t{}".format(sec, mpx))
 
 # block = np.zeros(shape=(1536,1536), dtype=np.uint8) + 1
 
