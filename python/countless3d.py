@@ -8,6 +8,7 @@ import random
 import sys
 from collections import defaultdict
 from itertools import combinations
+from functools import reduce
 from tqdm import tqdm
 
 def countless5(a,b,c,d,e):
@@ -69,6 +70,54 @@ def countless8(a,b,c,d,e,f,g,h):
   res = results4 + (results4 == 0) * results3
   res = res + (res == 0) * results2
   return res + (res == 0) * h
+
+def dynamic_countless3d(data):
+  """countless8 + dynamic programming. ~2x faster"""
+  sections = []
+
+  # shift zeros up one so they don't interfere with bitwise operators
+  # we'll shift down at the end
+  data = data + 1 
+  
+  # This loop splits the 2D array apart into four arrays that are
+  # all the result of striding by 2 and offset by (0,0), (0,1), (1,0), 
+  # and (1,1) representing the A, B, C, and D positions from Figure 1.
+  factor = (2,2,2)
+  for offset in np.ndindex(factor):
+    part = data[tuple(np.s_[o::f] for o, f in zip(offset, factor))]
+    sections.append(part)
+  
+  p2 = lambda q,r: q * (q == r)
+  lor = lambda x,y: x + (x == 0) * y
+
+  subproblems2 = {}
+
+  results2 = []
+  for x,y in combinations(range(8), 2):
+    res = p2(sections[x], sections[y])
+    subproblems2[(x,y)] = res
+    results2.append(res)
+  # We can always use our shortcut of omitting the last element
+  # for N choose 2 
+  results2 = reduce(lor, results2[:-1])
+
+  subproblems3 = {}
+
+  results3 = []
+  for x,y,z in combinations(range(8), 3):
+    res = p2(subproblems2[(x,y)], sections[z])
+    subproblems3[(x,y,z)] = res
+    results3.append(res)
+  subproblems2 = None
+  results3 = reduce(lor, results3) 
+
+  results4 = [ p2(subproblems3[(x,y,z)], sections[w]) for x,y,z,w in combinations(range(8), 4) ]
+  subproblems3 = None
+  results4 = reduce(lor, results4) 
+
+  res = results4 + (results4 == 0) * results3
+  res = res + (res == 0) * results2
+  return (res + (res == 0) * sections[-1]) - 1
 
 def countless3d(data):
   """Now write countless8 in such a way that it could be used
@@ -144,21 +193,35 @@ def countless_generalized(data, factor):
 
   return result + (result == 0) * sections[-1] - 1
 
-block = np.zeros(shape=(1536,1536), dtype=np.uint8) + 1
+block = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
 
-print "i\tj\ti*j\tsec\tMpx/sec"
-for i in range(2,5):
-  for j in range(2,5,1):
-    # print "{}x{} ({})".format(i,j,i*j)
-    start = time.clock()
-    ct = 5
-    for _ in range(ct):
-      countless_generalized(block, (i,j))
-    end = time.clock()
+start = time.clock()
+ct = 2
+for _ in tqdm(range(ct)):
+  dynamic_countless3d(block)
+  # countless3d(block)
+  # countless_generalized(block, (2,2,2))
+end = time.clock()
 
-    sec = end - start
-    mpx = ct * (1536.0 * 1536.0) / sec / 1e6
-    print "{}\t{}\t{}\t{}\t{}".format(i,j,i*j,sec, mpx)
+sec = end - start
+mpx = ct * (block.shape[0] * block.shape[1] * block.shape[2]) / sec / 1e6
+print("{}\t{}".format(sec, mpx))
+
+# block = np.zeros(shape=(1536,1536), dtype=np.uint8) + 1
+
+# print "i\tj\ti*j\tsec\tMpx/sec"
+# for i in range(2,5):
+#   for j in range(2,5,1):
+#     # print "{}x{} ({})".format(i,j,i*j)
+#     start = time.clock()
+#     ct = 5
+#     for _ in range(ct):
+#       countless_generalized(block, (i,j))
+#     end = time.clock()
+
+#     sec = end - start
+#     mpx = ct * (1536.0 * 1536.0) / sec / 1e6
+#     print "{}\t{}\t{}\t{}\t{}".format(i,j,i*j,sec, mpx)
 
 
 

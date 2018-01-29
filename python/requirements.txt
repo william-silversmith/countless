@@ -2,3 +2,4 @@ Pillow==4.2.1
 numpy==1.13.3
 scipy
 tqdm
+pytest
