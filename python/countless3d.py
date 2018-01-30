@@ -75,7 +75,7 @@ def dynamic_countless3d(data):
 
   # shift zeros up one so they don't interfere with bitwise operators
   # we'll shift down at the end
-  data = data + 1 
+  data += 1 
   
   # This loop splits the 2D array apart into four arrays that are
   # all the result of striding by 2 and offset by (0,0), (0,1), (1,0), 
@@ -104,18 +104,24 @@ def dynamic_countless3d(data):
   results3 = None
   for x,y,z in combinations(range(8), 3):
     res = pick(subproblems2[(x,y)], sections[z])
-    subproblems3[(x,y,z)] = res
+
+    if z != 7:
+      subproblems3[(x,y,z)] = res
+
     if results3 is not None:
       results3 += (results3 == 0) * res
     else:
       results3 = res
+
   subproblems2 = None # free memory
 
   results4 = ( pick(subproblems3[(x,y,z)], sections[w]) for x,y,z,w in combinations(range(8), 4) )
   results4 = reduce(lor, results4) 
   subproblems3 = None # free memory
 
-  return reduce(lor, (results4, results3, results2, sections[-1])) - 1
+  final_result = reduce(lor, (results4, results3, results2, sections[-1])) - 1
+  data -= 1
+  return final_result
 
 def countless3d(data):
   """Now write countless8 in such a way that it could be used
@@ -304,18 +310,18 @@ def test(fn):
 
   assert fn(np.array(fivesame)) == [[[5]]]
 
-# test(countless3d)
-# test(dynamic_countless3d)
-# test(lambda x: countless_generalized(x, (2,2,2)))
-# test(lambda x: dynamic_countless_generalized(x, (2,2,2)))
+test(countless3d)
+test(dynamic_countless3d)
+test(lambda x: countless_generalized(x, (2,2,2)))
+test(lambda x: dynamic_countless_generalized(x, (2,2,2)))
 
 block = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
 
 start = time.clock()
 ct = 1
 for _ in tqdm(range(ct)):
-  # dynamic_countless3d(block)
-  countless3d(block)
+  dynamic_countless3d(block)
+  # countless3d(block)
   # countless_generalized(block, (2,2,2))
   # dynamic_countless_generalized(block, (2,2,2))
 end = time.clock()
