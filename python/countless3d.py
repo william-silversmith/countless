@@ -37,14 +37,13 @@ def countless5(a,b,c,d,e):
 
   lor = lambda x,y: x + (x == 0) * y
 
-  results3 = [ p3(x,y,z) for x,y,z in combinations(sections, 3)  ]
+  results3 = ( p3(x,y,z) for x,y,z in combinations(sections, 3) )
   results3 = reduce(lor, results3)
 
-  results2 = [ p2(x,y) for x,y in combinations(sections[:-1], 2) ]
+  results2 = ( p2(x,y) for x,y in combinations(sections[:-1], 2) )
   results2 = reduce(lor, results2)
 
-  res = results3 + (results3 == 0) * results2
-  return res + (res == 0) * e
+  return reduce(lor, (results3, results2, e))
 
 def countless8(a,b,c,d,e,f,g,h):
   """Extend countless5 to countless8. Same deal, except we also
@@ -57,15 +56,15 @@ def countless8(a,b,c,d,e,f,g,h):
 
   lor = lambda x,y: x + (x == 0) * y
 
-  results4 = [ p4(x,y,z,w) for x,y,z,w in combinations(sections, 4)  ]
+  results4 = ( p4(x,y,z,w) for x,y,z,w in combinations(sections, 4) )
   results4 = reduce(lor, results4)
 
-  results3 = [ p3(x,y,z) for x,y,z in combinations(sections, 3)  ]
+  results3 = ( p3(x,y,z) for x,y,z in combinations(sections, 3) )
   results3 = reduce(lor, results3)
 
   # We can always use our shortcut of omitting the last element
   # for N choose 2 
-  results2 = [ p2(x,y) for x,y in combinations(sections[:-1], 2)  ]
+  results2 = ( p2(x,y) for x,y in combinations(sections[:-1], 2) )
   results2 = reduce(lor, results2)
 
   return reduce(lor, [ results4, results3, results2, h ])
@@ -141,13 +140,13 @@ def countless3d(data):
 
   lor = lambda x,y: x + (x == 0) * y
 
-  results4 = [ p4(x,y,z,w) for x,y,z,w in combinations(sections, 4)  ]
+  results4 = ( p4(x,y,z,w) for x,y,z,w in combinations(sections, 4)  )
   results4 = reduce(lor, results4)
 
-  results3 = [ p3(x,y,z) for x,y,z in combinations(sections, 3)  ]
+  results3 = ( p3(x,y,z) for x,y,z in combinations(sections, 3)  )
   results3 = reduce(lor, results3)
 
-  results2 = [ p2(x,y) for x,y in combinations(sections[:-1], 2)  ]
+  results2 = ( p2(x,y) for x,y in combinations(sections[:-1], 2)  )
   results2 = reduce(lor, results2)
 
   return reduce(lor, (results4, results3, results2, sections[-1])) - 1
@@ -170,21 +169,21 @@ def countless_generalized(data, factor):
     sections.append(part)
 
   def pick(elements):
-    eq = [ elements[i] == elements[i+1] for i in range(len(elements) - 1) ]
+    eq = ( elements[i] == elements[i+1] for i in range(len(elements) - 1) )
     anded = reduce(lambda p,q: p & q, eq)
     return elements[0] * anded
 
   def logical_or(x,y):
     return x + (x == 0) * y
 
-  result = [ pick(combo) for combo in combinations(sections, majority)  ]
+  result = ( pick(combo) for combo in combinations(sections, majority) )
   result = reduce(logical_or, result)
   for i in range(majority - 1, 3-1, -1): # 3-1 b/c of exclusive bounds
-    partial_result = [ pick(combo) for combo in combinations(sections, i)  ]
+    partial_result = ( pick(combo) for combo in combinations(sections, i) )
     partial_result = reduce(logical_or, partial_result)
     result = logical_or(result, partial_result)
 
-  partial_result = [ pick(combo) for combo in combinations(sections[:-1], 2)  ]
+  partial_result = ( pick(combo) for combo in combinations(sections[:-1], 2) )
   partial_result = reduce(logical_or, partial_result)
   result = logical_or(result, partial_result)
 
@@ -305,18 +304,18 @@ def test(fn):
 
   assert fn(np.array(fivesame)) == [[[5]]]
 
-test(countless3d)
-test(dynamic_countless3d)
-test(lambda x: countless_generalized(x, (2,2,2)))
-test(lambda x: dynamic_countless_generalized(x, (2,2,2)))
+# test(countless3d)
+# test(dynamic_countless3d)
+# test(lambda x: countless_generalized(x, (2,2,2)))
+# test(lambda x: dynamic_countless_generalized(x, (2,2,2)))
 
 block = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
 
 start = time.clock()
-ct = 3
+ct = 1
 for _ in tqdm(range(ct)):
-  dynamic_countless3d(block)
-  # countless3d(block)
+  # dynamic_countless3d(block)
+  countless3d(block)
   # countless_generalized(block, (2,2,2))
   # dynamic_countless_generalized(block, (2,2,2))
 end = time.clock()

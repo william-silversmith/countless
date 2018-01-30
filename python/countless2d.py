@@ -1,7 +1,7 @@
 """
 COUNTLESS performance test in Python.
 
-python downsample_perf.py ./images/NAMEOFIMAGE
+python countless2d.py ./images/NAMEOFIMAGE
 """
 
 from collections import defaultdict
