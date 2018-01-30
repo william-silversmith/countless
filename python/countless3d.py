@@ -112,9 +112,9 @@ def dynamic_countless3d(data):
       results3 = res
   subproblems2 = None # free memory
 
-  results4 = [ pick(subproblems3[(x,y,z)], sections[w]) for x,y,z,w in combinations(range(8), 4) ]
-  subproblems3 = None # free memory
+  results4 = ( pick(subproblems3[(x,y,z)], sections[w]) for x,y,z,w in combinations(range(8), 4) )
   results4 = reduce(lor, results4) 
+  subproblems3 = None # free memory
 
   return reduce(lor, (results4, results3, results2, sections[-1])) - 1
 
@@ -313,7 +313,7 @@ test(lambda x: dynamic_countless_generalized(x, (2,2,2)))
 block = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
 
 start = time.clock()
-ct = 2
+ct = 3
 for _ in tqdm(range(ct)):
   dynamic_countless3d(block)
   # countless3d(block)
