@@ -49,7 +49,7 @@ def countless5(a,b,c,d,e):
 def countless8(a,b,c,d,e,f,g,h):
   """Extend countless5 to countless8. Same deal, except we also
     need to check for matches of length 4."""
-  sections = [a,b,c,d,e,f,g,h]
+  sections = [ a, b, c, d, e, f, g, h ]
   
   p2 = lambda q,r: q * (q == r)
   p3 = lambda q,r,s: q * ( (q == r) & (r == s) )
@@ -68,9 +68,7 @@ def countless8(a,b,c,d,e,f,g,h):
   results2 = [ p2(x,y) for x,y in combinations(sections[:-1], 2)  ]
   results2 = reduce(lor, results2)
 
-  res = results4 + (results4 == 0) * results3
-  res = res + (res == 0) * results2
-  return res + (res == 0) * h
+  return reduce(lor, [ results4, results3, results2, h ])
 
 def dynamic_countless3d(data):
   """countless8 + dynamic programming. ~2x faster"""
@@ -88,37 +86,37 @@ def dynamic_countless3d(data):
     part = data[tuple(np.s_[o::f] for o, f in zip(offset, factor))]
     sections.append(part)
   
-  p2 = lambda q,r: q * (q == r)
+  pick = lambda a,b: a * (a == b)
   lor = lambda x,y: x + (x == 0) * y
 
   subproblems2 = {}
 
-  results2 = []
-  for x,y in combinations(range(8), 2):
-    res = p2(sections[x], sections[y])
+  results2 = None
+  for x,y in combinations(range(7), 2):
+    res = pick(sections[x], sections[y])
     subproblems2[(x,y)] = res
-    results2.append(res)
-  # We can always use our shortcut of omitting the last element
-  # for N choose 2 
-  results2 = reduce(lor, results2[:-1])
+    if results2 is not None:
+      results2 += (results2 == 0) * res
+    else:
+      results2 = res
 
   subproblems3 = {}
 
-  results3 = []
+  results3 = None
   for x,y,z in combinations(range(8), 3):
-    res = p2(subproblems2[(x,y)], sections[z])
+    res = pick(subproblems2[(x,y)], sections[z])
     subproblems3[(x,y,z)] = res
-    results3.append(res)
-  subproblems2 = None
-  results3 = reduce(lor, results3) 
+    if results3 is not None:
+      results3 += (results3 == 0) * res
+    else:
+      results3 = res
+  subproblems2 = None # free memory
 
-  results4 = [ p2(subproblems3[(x,y,z)], sections[w]) for x,y,z,w in combinations(range(8), 4) ]
-  subproblems3 = None
+  results4 = [ pick(subproblems3[(x,y,z)], sections[w]) for x,y,z,w in combinations(range(8), 4) ]
+  subproblems3 = None # free memory
   results4 = reduce(lor, results4) 
 
-  res = results4 + (results4 == 0) * results3
-  res = res + (res == 0) * results2
-  return (res + (res == 0) * sections[-1]) - 1
+  return reduce(lor, (results4, results3, results2, sections[-1])) - 1
 
 def countless3d(data):
   """Now write countless8 in such a way that it could be used
@@ -152,9 +150,7 @@ def countless3d(data):
   results2 = [ p2(x,y) for x,y in combinations(sections[:-1], 2)  ]
   results2 = reduce(lor, results2)
 
-  res = results4 + (results4 == 0) * results3
-  res = res + (res == 0) * results2
-  return res + (res == 0) * sections[-1] - 1
+  return reduce(lor, (results4, results3, results2, sections[-1])) - 1
 
 def countless_generalized(data, factor):
   assert len(data.shape) == len(factor)
@@ -186,13 +182,60 @@ def countless_generalized(data, factor):
   for i in range(majority - 1, 3-1, -1): # 3-1 b/c of exclusive bounds
     partial_result = [ pick(combo) for combo in combinations(sections, i)  ]
     partial_result = reduce(logical_or, partial_result)
-    result = result + (result == 0) * partial_result
+    result = logical_or(result, partial_result)
 
   partial_result = [ pick(combo) for combo in combinations(sections[:-1], 2)  ]
   partial_result = reduce(logical_or, partial_result)
-  result = result + (result == 0) * partial_result
+  result = logical_or(result, partial_result)
 
-  return result + (result == 0) * sections[-1] - 1
+  return logical_or(result, sections[-1]) - 1
+
+def dynamic_countless_generalized(data, factor):
+  assert len(data.shape) == len(factor)
+
+  sections = []
+
+  mode_of = reduce(lambda x,y: x * y, factor)
+  majority = int(math.ceil(float(mode_of) / 2))
+
+  data = data + 1
+  
+  # This loop splits the 2D array apart into four arrays that are
+  # all the result of striding by 2 and offset by (0,0), (0,1), (1,0), 
+  # and (1,1) representing the A, B, C, and D positions from Figure 1.
+  for offset in np.ndindex(factor):
+    part = data[tuple(np.s_[o::f] for o, f in zip(offset, factor))]
+    sections.append(part)
+
+  pick = lambda a,b: a * (a == b)
+  lor = lambda x,y: x + (x == 0) * y
+
+  subproblems = [ {}, {} ]
+  results2 = None
+  for x,y in combinations(range(len(sections) - 1), 2):
+    res = pick(sections[x], sections[y])
+    subproblems[0][(x,y)] = res
+    if results2 is not None:
+      results2 = lor(results2, res)
+    else:
+      results2 = res
+
+  results = [ results2 ]
+  for r in range(3, majority+1):
+    r_results = None
+    for combo in combinations(range(len(sections)), r):
+      res = pick(subproblems[0][combo[:-1]], sections[combo[-1]])
+      subproblems[1][combo] = res
+      if r_results is not None:
+        r_results = lor(r_results, res)
+      else:
+        r_results = res
+    results.append(r_results)
+    subproblems[0] = subproblems[1]
+    subproblems[1] = {}
+    
+  results.reverse()
+  return lor(reduce(lor, results), sections[-1]) - 1
 
 def test(fn):
   alldifferent = [
@@ -265,21 +308,22 @@ def test(fn):
 test(countless3d)
 test(dynamic_countless3d)
 test(lambda x: countless_generalized(x, (2,2,2)))
+test(lambda x: dynamic_countless_generalized(x, (2,2,2)))
 
+block = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
 
-# block = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
+start = time.clock()
+ct = 2
+for _ in tqdm(range(ct)):
+  dynamic_countless3d(block)
+  # countless3d(block)
+  # countless_generalized(block, (2,2,2))
+  # dynamic_countless_generalized(block, (2,2,2))
+end = time.clock()
 
-# start = time.clock()
-# ct = 2
-# for _ in tqdm(range(ct)):
-#   dynamic_countless3d(block)
-#   # countless3d(block)
-#   # countless_generalized(block, (2,2,2))
-# end = time.clock()
-
-# sec = end - start
-# mpx = ct * (block.shape[0] * block.shape[1] * block.shape[2]) / sec / 1e6
-# print("{}\t{}".format(sec, mpx))
+sec = end - start
+mpx = ct * (block.shape[0] * block.shape[1] * block.shape[2]) / sec / 1e6
+print("{}\t{}".format(sec, mpx))
 
 # block = np.zeros(shape=(1536,1536), dtype=np.uint8) + 1
 
