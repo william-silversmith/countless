@@ -12,6 +12,8 @@ from itertools import combinations
 from functools import reduce
 from tqdm import tqdm
 
+from memory_profiler import profile
+
 def countless5(a,b,c,d,e):
   """First stage of generalizing from countless2d. 
 
@@ -69,6 +71,7 @@ def countless8(a,b,c,d,e,f,g,h):
 
   return reduce(lor, [ results4, results3, results2, h ])
 
+@profile
 def dynamic_countless3d(data):
   """countless8 + dynamic programming. ~2x faster"""
   sections = []
@@ -113,13 +116,18 @@ def dynamic_countless3d(data):
     else:
       results3 = res
 
-  subproblems2 = None # free memory
+  results3 = reduce(lor, (results3, results2, sections[-1]))
+
+  # free memory
+  results2 = None
+  subproblems2 = None 
+  res = None
 
   results4 = ( pick(subproblems3[(x,y,z)], sections[w]) for x,y,z,w in combinations(range(8), 4) )
   results4 = reduce(lor, results4) 
   subproblems3 = None # free memory
 
-  final_result = reduce(lor, (results4, results3, results2, sections[-1])) - 1
+  final_result = lor(results4, results3) - 1
   data -= 1
   return final_result
 
