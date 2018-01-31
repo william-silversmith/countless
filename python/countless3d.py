@@ -71,7 +71,6 @@ def countless8(a,b,c,d,e,f,g,h):
 
   return reduce(lor, [ results4, results3, results2, h ])
 
-@profile
 def dynamic_countless3d(data):
   """countless8 + dynamic programming. ~2x faster"""
   sections = []
@@ -211,7 +210,7 @@ def dynamic_countless_generalized(data, factor):
   mode_of = reduce(lambda x,y: x * y, factor)
   majority = int(math.ceil(float(mode_of) / 2))
 
-  data = data + 1
+  data += 1
   
   # This loop splits the 2D array apart into four arrays that are
   # all the result of striding by 2 and offset by (0,0), (0,1), (1,0), 
@@ -238,7 +237,10 @@ def dynamic_countless_generalized(data, factor):
     r_results = None
     for combo in combinations(range(len(sections)), r):
       res = pick(subproblems[0][combo[:-1]], sections[combo[-1]])
-      subproblems[1][combo] = res
+      
+      if combo[-1] != len(sections) - 1:
+        subproblems[1][combo] = res
+
       if r_results is not None:
         r_results = lor(r_results, res)
       else:
@@ -248,7 +250,9 @@ def dynamic_countless_generalized(data, factor):
     subproblems[1] = {}
     
   results.reverse()
-  return lor(reduce(lor, results), sections[-1]) - 1
+  final_result = lor(reduce(lor, results), sections[-1]) - 1
+  data -= 1
+  return final_result
 
 def test(fn):
   alldifferent = [
@@ -328,10 +332,10 @@ block = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
 start = time.clock()
 ct = 1
 for _ in tqdm(range(ct)):
-  dynamic_countless3d(block)
+  # dynamic_countless3d(block)
   # countless3d(block)
   # countless_generalized(block, (2,2,2))
-  # dynamic_countless_generalized(block, (2,2,2))
+  dynamic_countless_generalized(block, (2,2,2))
 end = time.clock()
 
 sec = end - start
