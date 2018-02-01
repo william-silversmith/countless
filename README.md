@@ -1,7 +1,9 @@
+[![Build Status](https://travis-ci.org/william-silversmith/countless.svg?branch=master)](https://travis-ci.org/william-silversmith/countless)
+
 # countless
 Code and performance tests to demonstrate the COUNTLESS algorithm, a method for downsampling image labels based on taking the mode of 2x2 blocks.
 
-Read more about thi
+Read more about this
 https://medium.com/@willsilversmith/countless-high-performance-2x-downsampling-of-labeled-images-using-numpy-e70ad3275589
 
 
