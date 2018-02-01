@@ -6,7 +6,7 @@ COUNTLESS performance test in Python.
 python countless2d.py ./images/NAMEOFIMAGE
 """
 
-from builtins import range
+from six.moves import range
 from collections import defaultdict
 import io
 import os
