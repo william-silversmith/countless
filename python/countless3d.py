@@ -210,7 +210,7 @@ def dynamic_countless_generalized(data, factor):
   mode_of = reduce(lambda x,y: x * y, factor)
   majority = int(math.ceil(float(mode_of) / 2))
 
-  data += 1
+  data += 1 # offset from zero
   
   # This loop splits the 2D array apart into four arrays that are
   # all the result of striding by 2 and offset by (0,0), (0,1), (1,0), 
@@ -220,7 +220,7 @@ def dynamic_countless_generalized(data, factor):
     sections.append(part)
 
   pick = lambda a,b: a * (a == b)
-  lor = lambda x,y: x + (x == 0) * y
+  lor = lambda x,y: x + (x == 0) * y # logical or
 
   subproblems = [ {}, {} ]
   results2 = None
@@ -322,44 +322,48 @@ def test(fn):
 
   assert fn(np.array(fivesame)) == [[[5]]]
 
-test(countless3d)
-test(dynamic_countless3d)
-test(lambda x: countless_generalized(x, (2,2,2)))
-test(lambda x: dynamic_countless_generalized(x, (2,2,2)))
+def countless3d_generalized(img):
+  return countless_generalized(img, (2,2,2))
+def countless3d_dynamic_generalized(img):
+  return dynamic_countless_generalized(img, (2,2,2))
 
-block = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
+methods = [
+  countless3d,
+  dynamic_countless3d,
+  countless3d_generalized,
+  countless3d_dynamic_generalized,
+]
 
-start = time.clock()
-ct = 1
-for _ in tqdm(range(ct)):
-  # dynamic_countless3d(block)
-  # countless3d(block)
-  # countless_generalized(block, (2,2,2))
-  dynamic_countless_generalized(block, (2,2,2))
-end = time.clock()
+data = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
 
-sec = end - start
-mpx = ct * (block.shape[0] * block.shape[1] * block.shape[2]) / sec / 1e6
-print("{}\t{}".format(sec, mpx))
+N = 5
 
-# block = np.zeros(shape=(1536,1536), dtype=np.uint8) + 1
+print('Function\tMPx\tMB/sec\tSec\tN=%d' % N)
 
-# print "i\tj\ti*j\tsec\tMpx/sec"
-# for i in range(2,5):
-#   for j in range(2,5,1):
-#     # print "{}x{} ({})".format(i,j,i*j)
-#     start = time.clock()
-#     ct = 5
-#     for _ in range(ct):
-#       countless_generalized(block, (i,j))
-#     end = time.clock()
+for fn in methods:
+  start = time.time()
+  
+  test(fn)
 
-#     sec = end - start
-#     mpx = ct * (1536.0 * 1536.0) / sec / 1e6
-#     print "{}\t{}\t{}\t{}\t{}".format(i,j,i*j,sec, mpx)
+  # tqdm is here to show you what's going on the first time you run it.
+  # Feel free to remove it to get slightly more accurate timing results.
+  for _ in range(N):
+    result = fn(data)
+  end = time.time()
 
+  total_time = (end - start)
+  mpx = N * float(data.shape[0] * data.shape[1] * data.shape[2]) / total_time / 1024.0 / 1024.0
+  mbytes = mpx * np.dtype(data.dtype).itemsize
+  # Output in tab separated format to enable copy-paste into excel/numbers
+  print("%s\t%.3f\t%.3f\t%.2f" % (fn.__name__, mpx, mbytes, total_time))
 
 
+# Some results:
+# Function                         MPx     MB/sec  Sec   ; N=5
+# countless3d                      10.983  10.983  58.27
+# dynamic_countless3d              24.522  24.522  26.10
+# countless3d_generalized          10.671  10.671  59.98
+# countless3d_dynamic_generalized  25.280  25.280  25.32
 
 
 
