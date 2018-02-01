@@ -83,7 +83,7 @@ def zero_corrected_countless(data):
   # at the top end by using a bigger type. Without this 255 is handled incorrectly.
   data, upgraded = upgrade_type(data) 
 
-  data = data + 1 # don't use +=, it will affect the original data.
+  data += 1 
 
   sections = []
   
@@ -108,6 +108,8 @@ def zero_corrected_countless(data):
   if upgraded:
     return downgrade_type(result)
 
+  data -= 1
+
   return result
 
 def countless(data):
@@ -121,7 +123,7 @@ def countless(data):
   # at the top end by using a bigger type. Without this 255 is handled incorrectly.
   data, upgraded = upgrade_type(data) 
 
-  data = data + 1 # don't use +=, it will affect the original data.
+  data += 1 # don't use +=, it will affect the original data.
 
   sections = []
   
@@ -143,6 +145,8 @@ def countless(data):
 
   if upgraded:
     return downgrade_type(result)
+
+  data -= 1
 
   return result
 
