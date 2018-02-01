@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, division
 
 """
 COUNTLESS performance test in Python.
@@ -6,6 +6,7 @@ COUNTLESS performance test in Python.
 python countless2d.py ./images/NAMEOFIMAGE
 """
 
+import six
 from six.moves import range
 from collections import defaultdict
 import io
@@ -229,11 +230,11 @@ def counting(array):
             hashtable[block[subx, suby]] += 1
 
           best = (0, 0)
-          for segid, val in hashtable.iteritems():
+          for segid, val in six.iteritems(hashtable):
             if best[1] < val:
               best = (segid, val)
 
-          output[ x / 2, y / 2, chan ] = best[0]
+          output[ x // 2, y // 2, chan ] = best[0]
     
     return np.squeeze(output)
 
@@ -266,7 +267,7 @@ def countless_if(array):
           else:
             pick = block[1,1]
 
-          output[ x / 2, y / 2, chan ] = pick
+          output[ x // 2, y // 2, chan ] = pick
     
     return np.squeeze(output)
 
