@@ -1,9 +1,12 @@
+from __future__ import print_function
+
 """
 COUNTLESS performance test in Python.
 
 python countless2d.py ./images/NAMEOFIMAGE
 """
 
+from builtins import range
 from collections import defaultdict
 import io
 import os
@@ -212,9 +215,9 @@ def counting(array):
     output_shape = tuple(int(math.ceil(s / f)) for s, f in zip(shape, factor))
     output = np.zeros(output_shape, dtype=np.uint8)
 
-    for chan in xrange(0, shape[2]):
-      for x in xrange(0, shape[0], 2):
-        for y in xrange(0, shape[1], 2):
+    for chan in range(0, shape[2]):
+      for x in range(0, shape[0], 2):
+        for y in range(0, shape[1], 2):
           block = array[ x:x+2, y:y+2, chan ] # 2x2 block
 
           hashtable = defaultdict(int)
@@ -245,9 +248,9 @@ def countless_if(array):
     output_shape = tuple(int(math.ceil(s / f)) for s, f in zip(shape, factor))
     output = np.zeros(output_shape, dtype=np.uint8)
 
-    for chan in xrange(0, shape[2]):
-      for x in xrange(0, shape[0], 2):
-        for y in xrange(0, shape[1], 2):
+    for chan in range(0, shape[2]):
+      for x in range(0, shape[0], 2):
+        for y in range(0, shape[1], 2):
           block = array[ x:x+2, y:y+2, chan ] # 2x2 block
 
           if block[0,0] == block[1,0]:
@@ -356,22 +359,23 @@ if not os.path.exists('./results'):
 
 N = 100
 img_size = img.width * img.height / 1e6
-print "N = %d, %dx%d (%.2f MPx) %d chan, %s" % (N, img.width, img.height, img_size, n_channels, filename)
+print("N = %d, %dx%d (%.2f MPx) %d chan, %s" % (N, img.width, img.height, img_size, n_channels, filename))
+print("Function\tMPx/sec\tMB/sec\tSec")
 for fn in methods:
   start = time.time()
   
   # tqdm is here to show you what's going on the first time you run it.
   # Feel free to remove it to get slightly more accurate timing results.
-  for _ in tqdm(xrange(N), desc=fn.__name__):
+  for _ in tqdm(range(N), desc=fn.__name__, disable=True):
     result = fn(data)
   end = time.time()
-  print "\r",
+  print("\r", end='')
 
   total_time = (end - start)
-  mpx = N * float(img.height * img.width) / total_time / 1e6
+  mpx = N * float(img.height * img.width) / total_time / 1024.0 / 1024.0
   mbytes = N * float(img.height * img.width * n_channels) / total_time / 1024.0 / 1024.0
   # Output in tab separated format to enable copy-paste into excel/numbers
-  print "%s\t%.3f\t%.3f\t%.2f" % (fn.__name__, mpx, mbytes, total_time)
+  print("%s\t%.3f\t%.3f\t%.2f" % (fn.__name__, mpx, mbytes, total_time))
   img = Image.fromarray(result, formats[n_channels])
   img.save('./results/{}.png'.format(fn.__name__, "PNG"))
 
