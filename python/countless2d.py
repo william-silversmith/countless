@@ -372,7 +372,7 @@ def benchmark():
   if not os.path.exists('./results'):
     os.mkdir('./results')
 
-  N = 50
+  N = 5
   img_size = float(img.width * img.height) / 1024.0 / 1024.0
   print("N = %d, %dx%d (%.2f MPx) %d chan, %s" % (N, img.width, img.height, img_size, n_channels, filename))
   print("Function\tMPx/sec\tMB/sec\tSec")
@@ -390,8 +390,25 @@ def benchmark():
     mbytes = N * img_size * n_channels / total_time
     # Output in tab separated format to enable copy-paste into excel/numbers
     print("%s\t%.3f\t%.3f\t%.2f" % (fn.__name__, mpx, mbytes, total_time))
-    outimg = Image.fromarray(result, formats[n_channels])
+    outimg = Image.fromarray(np.squeeze(result), formats[n_channels])
     outimg.save('./results/{}.png'.format(fn.__name__, "PNG"))
 
 if __name__ == '__main__':
   benchmark()
+
+
+# Example results:
+# N = 5, 1024x1024 (1.00 MPx) 1 chan, images/gray_segmentation.png
+# Function                        MPx/sec   MB/sec     Sec
+# simplest_countless              752.855   752.855    0.01
+# quick_countless                 920.328   920.328    0.01
+# zero_corrected_countless        534.143   534.143    0.01
+# countless                       644.247   644.247    0.01
+# downsample_with_averaging       372.575   372.575    0.01
+# downsample_with_max_pooling     974.060   974.060    0.01
+# ndzoom                          137.517   137.517    0.04
+# striding                      38550.588 38550.588    0.00
+# countless_if                      4.377     4.377    1.14
+# counting                          0.117     0.117   42.85
+
+
