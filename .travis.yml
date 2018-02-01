@@ -1,0 +1,10 @@
+language: python
+python:
+- '2.7'
+- '3.4'
+- '3.5'
+- '3.6'
+dist: trusty
+script:
+- pip install -r $TRAVIS_BUILD_DIR/python/requirements.txt
+- py.test -v -x $TRAVIS_BUILD_DIR/python/test.py || travis_terminate 1
