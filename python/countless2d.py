@@ -362,7 +362,7 @@ if not os.path.exists('./results'):
   os.mkdir('./results')
 
 N = 100
-img_size = img.width * img.height / 1e6
+img_size = float(img.width * img.height) / 1024.0 / 1024.0
 print("N = %d, %dx%d (%.2f MPx) %d chan, %s" % (N, img.width, img.height, img_size, n_channels, filename))
 print("Function\tMPx/sec\tMB/sec\tSec")
 for fn in methods:
@@ -376,10 +376,10 @@ for fn in methods:
   print("\r", end='')
 
   total_time = (end - start)
-  mpx = N * float(img.height * img.width) / total_time / 1024.0 / 1024.0
-  mbytes = N * float(img.height * img.width * n_channels) / total_time / 1024.0 / 1024.0
+  mpx = N * img_size / total_time
+  mbytes = N * img_size * n_channels / total_time
   # Output in tab separated format to enable copy-paste into excel/numbers
   print("%s\t%.3f\t%.3f\t%.2f" % (fn.__name__, mpx, mbytes, total_time))
-  img = Image.fromarray(result, formats[n_channels])
-  img.save('./results/{}.png'.format(fn.__name__, "PNG"))
+  outimg = Image.fromarray(result, formats[n_channels])
+  outimg.save('./results/{}.png'.format(fn.__name__, "PNG"))
 
