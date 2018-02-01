@@ -84,6 +84,8 @@ def zero_corrected_countless(data):
   # at the top end by using a bigger type. Without this 255 is handled incorrectly.
   data, upgraded = upgrade_type(data) 
 
+  # offset from zero, raw countless doesn't handle 0 correctly
+  # we'll remove the extra 1 at the end.
   data += 1 
 
   sections = []
@@ -109,6 +111,8 @@ def zero_corrected_countless(data):
   if upgraded:
     return downgrade_type(result)
 
+  # only need to reset data if we weren't upgraded 
+  # b/c no copy was made in that case
   data -= 1
 
   return result
@@ -124,7 +128,9 @@ def countless(data):
   # at the top end by using a bigger type. Without this 255 is handled incorrectly.
   data, upgraded = upgrade_type(data) 
 
-  data += 1 # don't use +=, it will affect the original data.
+  # offset from zero, raw countless doesn't handle 0 correctly
+  # we'll remove the extra 1 at the end.
+  data += 1 
 
   sections = []
   
@@ -147,6 +153,8 @@ def countless(data):
   if upgraded:
     return downgrade_type(result)
 
+  # only need to reset data if we weren't upgraded 
+  # b/c no copy was made in that case
   data -= 1
 
   return result
@@ -345,12 +353,12 @@ methods = [
   quick_countless,
   zero_corrected_countless,
   countless,
-  downsample_with_averaging,
-  downsample_with_max_pooling,
-  striding,
-  countless_if,
-  counting,
-  ndzoom
+  # downsample_with_averaging,
+  # downsample_with_max_pooling,
+  # striding,
+  # countless_if,
+  # counting,
+  # ndzoom
 ]
 
 formats = {
@@ -362,7 +370,7 @@ formats = {
 if not os.path.exists('./results'):
   os.mkdir('./results')
 
-N = 100
+N = 50
 img_size = float(img.width * img.height) / 1024.0 / 1024.0
 print("N = %d, %dx%d (%.2f MPx) %d chan, %s" % (N, img.width, img.height, img_size, n_channels, filename))
 print("Function\tMPx/sec\tMB/sec\tSec")
