@@ -275,11 +275,6 @@ def benchmark():
 
   for fn in methods:
     start = time.time()
-    
-    test(fn)
-
-    # tqdm is here to show you what's going on the first time you run it.
-    # Feel free to remove it to get slightly more accurate timing results.
     for _ in range(N):
       result = fn(data)
     end = time.time()
