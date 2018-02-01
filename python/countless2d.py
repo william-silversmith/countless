@@ -221,30 +221,31 @@ def counting(array):
     factor = (2, 2, 1)
     shape = array.shape
 
-    if len(shape) < 3:
-      array = array[ :,:, np.newaxis ]
+    if len(shape) < 4:
+      array = array[ :,:, np.newaxis, np.newaxis ]
       shape = array.shape
 
     output_shape = tuple(int(math.ceil(s / f)) for s, f in zip(shape, factor))
-    output = np.zeros(output_shape, dtype=np.uint8)
+    output = np.zeros(output_shape, dtype=array.dtype)
 
-    for chan in range(0, shape[2]):
-      for x in range(0, shape[0], 2):
-        for y in range(0, shape[1], 2):
-          block = array[ x:x+2, y:y+2, chan ] # 2x2 block
+    for chan in range(0, shape[3]):
+      for z in range(0, shape[2]):
+        for x in range(0, shape[0], 2):
+          for y in range(0, shape[1], 2):
+            block = array[ x:x+2, y:y+2, z, chan ] # 2x2 block
 
-          hashtable = defaultdict(int)
-          for subx,suby in np.ndindex(block.shape[0], block.shape[1]):
-            hashtable[block[subx, suby]] += 1
+            hashtable = defaultdict(int)
+            for subx, suby in np.ndindex(block.shape[0], block.shape[1]):
+              hashtable[block[subx, suby]] += 1
 
-          best = (0, 0)
-          for segid, val in six.iteritems(hashtable):
-            if best[1] < val:
-              best = (segid, val)
+            best = (0, 0)
+            for segid, val in six.iteritems(hashtable):
+              if best[1] < val:
+                best = (segid, val)
 
-          output[ x // 2, y // 2, chan ] = best[0]
+            output[ x // 2, y // 2, chan ] = best[0]
     
-    return np.squeeze(output)
+    return output
 
 def ndzoom(array):
     ratio=(1/2.0, 1/2.0)
@@ -259,7 +260,7 @@ def countless_if(array):
       shape = array.shape
 
     output_shape = tuple(int(math.ceil(s / f)) for s, f in zip(shape, factor))
-    output = np.zeros(output_shape, dtype=np.uint8)
+    output = np.zeros(output_shape, dtype=array.dtype)
 
     for chan in range(0, shape[2]):
       for x in range(0, shape[0], 2):
@@ -334,61 +335,63 @@ def striding(array):
     return array
   return array[tuple(np.s_[::f] for f in factor)]
 
-filename = sys.argv[1]
-img = Image.open(filename)
-data = np.array(img.getdata(), dtype=np.uint8)
+def benchmark():
+  filename = sys.argv[1]
+  img = Image.open(filename)
+  data = np.array(img.getdata(), dtype=np.uint8)
 
-if len(data.shape) == 1:
-  n_channels = 1
-  reshape = (img.height, img.width)
-else:
-  n_channels = min(data.shape[1], 3)
-  data = data[:, :n_channels]
-  reshape = (img.height, img.width, n_channels)
+  if len(data.shape) == 1:
+    n_channels = 1
+    reshape = (img.height, img.width)
+  else:
+    n_channels = min(data.shape[1], 3)
+    data = data[:, :n_channels]
+    reshape = (img.height, img.width, n_channels)
 
-data = data.reshape(reshape).astype(np.uint8)
+  data = data.reshape(reshape).astype(np.uint8)
 
-methods = [
-  simplest_countless,
-  quick_countless,
-  zero_corrected_countless,
-  countless,
-  # downsample_with_averaging,
-  # downsample_with_max_pooling,
-  # striding,
-  # countless_if,
-  # counting,
-  # ndzoom
-]
+  methods = [
+    simplest_countless,
+    quick_countless,
+    zero_corrected_countless,
+    countless,
+    downsample_with_averaging,
+    downsample_with_max_pooling,
+    ndzoom,
+    striding,
+    countless_if,
+    counting,
+  ]
 
-formats = {
-  1: 'L',
-  3: 'RGB',
-  4: 'RGBA'
-}
+  formats = {
+    1: 'L',
+    3: 'RGB',
+    4: 'RGBA'
+  }
 
-if not os.path.exists('./results'):
-  os.mkdir('./results')
+  if not os.path.exists('./results'):
+    os.mkdir('./results')
 
-N = 50
-img_size = float(img.width * img.height) / 1024.0 / 1024.0
-print("N = %d, %dx%d (%.2f MPx) %d chan, %s" % (N, img.width, img.height, img_size, n_channels, filename))
-print("Function\tMPx/sec\tMB/sec\tSec")
-for fn in methods:
-  start = time.time()
-  
-  # tqdm is here to show you what's going on the first time you run it.
-  # Feel free to remove it to get slightly more accurate timing results.
-  for _ in tqdm(range(N), desc=fn.__name__, disable=True):
-    result = fn(data)
-  end = time.time()
-  print("\r", end='')
+  N = 50
+  img_size = float(img.width * img.height) / 1024.0 / 1024.0
+  print("N = %d, %dx%d (%.2f MPx) %d chan, %s" % (N, img.width, img.height, img_size, n_channels, filename))
+  print("Function\tMPx/sec\tMB/sec\tSec")
+  for fn in methods:
+    start = time.time()
+    # tqdm is here to show you what's going on the first time you run it.
+    # Feel free to remove it to get slightly more accurate timing results.
+    for _ in tqdm(range(N), desc=fn.__name__, disable=True):
+      result = fn(data)
+    end = time.time()
+    print("\r", end='')
 
-  total_time = (end - start)
-  mpx = N * img_size / total_time
-  mbytes = N * img_size * n_channels / total_time
-  # Output in tab separated format to enable copy-paste into excel/numbers
-  print("%s\t%.3f\t%.3f\t%.2f" % (fn.__name__, mpx, mbytes, total_time))
-  outimg = Image.fromarray(result, formats[n_channels])
-  outimg.save('./results/{}.png'.format(fn.__name__, "PNG"))
+    total_time = (end - start)
+    mpx = N * img_size / total_time
+    mbytes = N * img_size * n_channels / total_time
+    # Output in tab separated format to enable copy-paste into excel/numbers
+    print("%s\t%.3f\t%.3f\t%.2f" % (fn.__name__, mpx, mbytes, total_time))
+    outimg = Image.fromarray(result, formats[n_channels])
+    outimg.save('./results/{}.png'.format(fn.__name__, "PNG"))
 
+if __name__ == '__main__':
+  benchmark()

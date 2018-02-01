@@ -4,3 +4,4 @@ scipy
 tqdm
 memory_profiler
 six
+pytest

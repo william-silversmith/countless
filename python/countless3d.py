@@ -254,109 +254,44 @@ def dynamic_countless_generalized(data, factor):
   data -= 1
   return final_result
 
-def test(fn):
-  alldifferent = [
-    [
-      [1,2],
-      [3,4],
-    ],
-    [
-      [5,6],
-      [7,8]
-    ]
-  ]
-  allsame = [
-    [
-      [1,1],
-      [1,1],
-    ],
-    [
-      [1,1],
-      [1,1]
-    ]
+def benchmark():
+  def countless3d_generalized(img):
+    return countless_generalized(img, (2,2,2))
+  def countless3d_dynamic_generalized(img):
+    return dynamic_countless_generalized(img, (2,2,2))
+
+  methods = [
+    countless3d,
+    dynamic_countless3d,
+    countless3d_generalized,
+    countless3d_dynamic_generalized,
   ]
 
-  assert fn(np.array(alldifferent)) == [[[8]]]
-  assert fn(np.array(allsame)) == [[[1]]]
+  data = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
 
-  twosame = deepcopy(alldifferent)
-  twosame[1][1][0] = 2
+  N = 5
 
-  assert fn(np.array(twosame)) == [[[2]]]
+  print('Function\tMPx\tMB/sec\tSec\tN=%d' % N)
 
-  threemixed = [
-    [
-      [3,3],
-      [1,2],
-    ],
-    [
-      [2,4],
-      [4,3]
-    ]
-  ]
-  assert fn(np.array(threemixed)) == [[[3]]]
+  for fn in methods:
+    start = time.time()
+    
+    test(fn)
 
-  foursame = [
-    [
-      [4,4],
-      [1,2],
-    ],
-    [
-      [2,4],
-      [4,3]
-    ]
-  ]
+    # tqdm is here to show you what's going on the first time you run it.
+    # Feel free to remove it to get slightly more accurate timing results.
+    for _ in range(N):
+      result = fn(data)
+    end = time.time()
 
-  assert fn(np.array(foursame)) == [[[4]]]
+    total_time = (end - start)
+    mpx = N * float(data.shape[0] * data.shape[1] * data.shape[2]) / total_time / 1024.0 / 1024.0
+    mbytes = mpx * np.dtype(data.dtype).itemsize
+    # Output in tab separated format to enable copy-paste into excel/numbers
+    print("%s\t%.3f\t%.3f\t%.2f" % (fn.__name__, mpx, mbytes, total_time))
 
-  fivesame = [
-    [
-      [5,4],
-      [5,5],
-    ],
-    [
-      [2,4],
-      [5,5]
-    ]
-  ]
-
-  assert fn(np.array(fivesame)) == [[[5]]]
-
-def countless3d_generalized(img):
-  return countless_generalized(img, (2,2,2))
-def countless3d_dynamic_generalized(img):
-  return dynamic_countless_generalized(img, (2,2,2))
-
-methods = [
-  countless3d,
-  dynamic_countless3d,
-  countless3d_generalized,
-  countless3d_dynamic_generalized,
-]
-
-data = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
-
-N = 5
-
-print('Function\tMPx\tMB/sec\tSec\tN=%d' % N)
-
-for fn in methods:
-  start = time.time()
-  
-  test(fn)
-
-  # tqdm is here to show you what's going on the first time you run it.
-  # Feel free to remove it to get slightly more accurate timing results.
-  for _ in range(N):
-    result = fn(data)
-  end = time.time()
-
-  total_time = (end - start)
-  mpx = N * float(data.shape[0] * data.shape[1] * data.shape[2]) / total_time / 1024.0 / 1024.0
-  mbytes = mpx * np.dtype(data.dtype).itemsize
-  # Output in tab separated format to enable copy-paste into excel/numbers
-  print("%s\t%.3f\t%.3f\t%.2f" % (fn.__name__, mpx, mbytes, total_time))
-
+if __name__ == '__main__':
+  benchmark()
 
 # Some results:
 # Function                         MPx     MB/sec  Sec   ; N=5
