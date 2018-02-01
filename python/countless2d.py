@@ -372,7 +372,7 @@ def benchmark():
   if not os.path.exists('./results'):
     os.mkdir('./results')
 
-  N = 5
+  N = 1000
   img_size = float(img.width * img.height) / 1024.0 / 1024.0
   print("N = %d, %dx%d (%.2f MPx) %d chan, %s" % (N, img.width, img.height, img_size, n_channels, filename))
   print("Function\tMPx/sec\tMB/sec\tSec")
