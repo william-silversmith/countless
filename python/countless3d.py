@@ -1,4 +1,4 @@
-from builtins import range
+from six.moves import range
 from PIL import Image
 import numpy as np
 import io
