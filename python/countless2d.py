@@ -221,8 +221,8 @@ def counting(array):
     factor = (2, 2, 1)
     shape = array.shape
 
-    if len(shape) < 4:
-      array = array[ :,:, np.newaxis, np.newaxis ]
+    while len(shape) < 4:
+      array = np.expand_dims(array, axis=-1)
       shape = array.shape
 
     output_shape = tuple(int(math.ceil(s / f)) for s, f in zip(shape, factor))
