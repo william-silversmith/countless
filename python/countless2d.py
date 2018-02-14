@@ -248,7 +248,10 @@ def counting(array):
     return output
 
 def ndzoom(array):
-    ratio=(1/2.0, 1/2.0)
+    if len(array.shape) == 3:
+      ratio = ( 1 / 2.0, 1 / 2.0, 1.0 )
+    else:
+      ratio = ( 1 / 2.0, 1 / 2.0)
     return ndimage.interpolation.zoom(array, ratio, order=1)
 
 def countless_if(array):
