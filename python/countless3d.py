@@ -271,7 +271,7 @@ def benchmark():
 
   N = 5
 
-  print('Function\tMPx\tMB/sec\tSec\tN=%d' % N)
+  print('Algorithm\tMPx\tMB/sec\tSec\tN=%d' % N)
 
   for fn in methods:
     start = time.time()

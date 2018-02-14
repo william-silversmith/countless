@@ -378,7 +378,7 @@ def benchmark():
   N = 1000
   img_size = float(img.width * img.height) / 1024.0 / 1024.0
   print("N = %d, %dx%d (%.2f MPx) %d chan, %s" % (N, img.width, img.height, img_size, n_channels, filename))
-  print("Function\tMPx/sec\tMB/sec\tSec")
+  print("Algorithm\tMPx/sec\tMB/sec\tSec")
   for fn in methods:
     start = time.time()
     # tqdm is here to show you what's going on the first time you run it.
