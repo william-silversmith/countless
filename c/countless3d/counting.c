@@ -25,7 +25,11 @@
 #define HALF_Y (Y_DIM / 2)
 #define HALF_Z (Z_DIM / 2)
 
-void test(int index, uint32_t* input, uint32_t* output) {
+#define X_OUT_OFF 1
+#define Y_OUT_OFF (X_DIM / 2)
+#define Z_OUT_OFF (X_DIM * Y_DIM / 4)
+
+void test(int index, uint16_t* input, uint16_t* output) {
     int o_x = index % HALF_X;
     int o_z = floor(index / (Z_OFF / 4));
     int t = index - o_z * (Z_OFF / 4);
@@ -38,36 +42,43 @@ void test(int index, uint32_t* input, uint32_t* output) {
     );
 }
 
-void downsample(uint32_t* input, uint32_t* output) {
-    int x, y, z;
+void downsample(uint16_t* input, uint16_t* output) {
+    uint16_t x, y, z;
     
-    int i_i = 0;
-    int o_i = 0;
+    uint32_t o_i = 0;
 
-    int vals[8];
+    uint16_t vals[8];
     
-    int maxCount = 0;
-    int maxVal;
-    int curCount;
-    int curVal;
+    uint16_t maxCount = 0;
+    uint16_t maxVal;
+    uint16_t curCount;
+    uint16_t curVal;
 
-    for (z = 0; z < HALF_Z; z++, i_i += Z_OFF) {
-        for (y = 0; y < HALF_Y; y++, i_i += Y_OFF) {
-            for (x = 0; x < HALF_X; x++, i_i += 2, o_i += 1) {
-                vals[0] = input[i_i];
-                vals[1] = input[i_i + X_OFF];
-                vals[2] = input[i_i + X_OFF + Y_OFF];
-                vals[3] = input[i_i + X_OFF + Z_OFF];
-                vals[4] = input[i_i + X_OFF + Y_OFF + Z_OFF];
-                vals[5] = input[i_i + Y_OFF];
-                vals[6] = input[i_i + Z_OFF];
-                vals[7] = input[i_i + Y_OFF + Z_OFF];
+    uint16_t x1, y0, y1, z0, z1;
+
+    for (x = 0; x < X_DIM; x += 2) {
+        for (y = 0; y < Y_DIM; y += 2) {
+            for (z = 0; z < Z_DIM; z += 2) {
+                y0 = y * Y_OFF;
+                z0 = z * Z_OFF;
+                x1 = x+1;
+                y1 = (y+1) * Y_OFF;
+                z1 = (z+1) * Z_OFF;
+
+                vals[0] = input[ x + y0 + z0 ];
+                vals[1] = input[ x1 + y0 + z0 ];
+                vals[2] = input[ x + y1 + z0 ];
+                vals[3] = input[ x1 + y1 + z0 ];
+                vals[4] = input[ x + y0 + z1 ];
+                vals[5] = input[ x1 + y0 + z1 ];
+                vals[6] = input[ x + y1 + z1 ];
+                vals[7] = input[ x1 + y1 + z1 ];
                 
                 maxCount = 0;
-                for (int t = 0; t < 8; t++) {
+                for (uint8_t t = 0; t < 8; t++) {
                     curVal = vals[t];
                     curCount = 0;
-                    for (int p = 0; p < 8; p++) {
+                    for (uint8_t p = 0; p < 8; p++) {
                         curCount += (curVal == vals[p]);
                     }
 
@@ -77,6 +88,7 @@ void downsample(uint32_t* input, uint32_t* output) {
                     }
                 }
                 
+                o_i = (x >> 1) + (y >> 1) * Y_OUT_OFF + (z >> 1) * Z_OUT_OFF;
                 output[o_i] = maxVal;
             }
         }
@@ -94,45 +106,46 @@ int main(int argc, char **argv) {
 
     printf("start %lu\n", sizeof(int));
 
-    uint32_t* input = (uint32_t*)malloc(VOX_COUNT * sizeof(uint32_t));
-    uint32_t* output = (uint32_t*)malloc(DS_VOX_COUNT * sizeof(uint32_t));
+    uint16_t* input = (uint16_t*)malloc(VOX_COUNT * sizeof(uint16_t));
+    uint16_t* output = (uint16_t*)malloc(DS_VOX_COUNT * sizeof(uint16_t));
 
     printf("allocated arrays\n");
 
     FILE *readPtr = fopen(argv[1], "rb");
     startT = clock();
-    fread(input, sizeof(uint32_t), VOX_COUNT, readPtr);
+    fread(input, sizeof(uint16_t), VOX_COUNT, readPtr);
     endT = clock();
     float sec = (endT - startT) / (float)CLOCKS_PER_SEC;
     printf("finished reading!, time: %f\n", sec);
     fclose(readPtr);
 
-    float acc = 0;
+    int minibatch = 1;
+    printf("MVx/sec\tsec;\tMVx = %d;\tN = %d\n", VOX_COUNT, minibatch);
+
     for (int i = 0; i < 1; i++) {
         startT = clock();
-        downsample(input, output);
+        for (int j = 0; j < minibatch; j++) {
+            downsample(input, output);    
+        }
         endT = clock();
         sec = (endT - startT) / (float)CLOCKS_PER_SEC;
-        float cur = VOX_COUNT / (1000000) / sec;
-        acc += cur;
-        printf("MV/sec time: %f\n", acc / (i + 1));
+        float mvxs = VOX_COUNT / (1024.0 * 1024.0) / sec * (float)minibatch;
+        printf("%.2f\t%.2f\n", mvxs, sec);
     }
-
     
     test(0, input, output);
     test(1, input, output);
     test(1000, input, output);
     test(234823, input, output);
-    test(125829120, input, output);
-    test(39469608, input, output);
-    test(129829120, input, output);
-
+    test(pow(2, 16) - 1 , input, output);
+    
     free(input);
 
     FILE *writePtr;
-    writePtr = fopen("output.bin","wb");
-    fwrite(output, sizeof(uint32_t), DS_VOX_COUNT, writePtr);
+    writePtr = fopen("output.raw","wb");
+    fwrite(output, sizeof(uint16_t), DS_VOX_COUNT, writePtr);
     fclose(writePtr);
+    printf("Wrote output.raw\n");
 
     free(output);
     return 0;

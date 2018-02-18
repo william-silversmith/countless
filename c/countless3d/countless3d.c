@@ -14,7 +14,7 @@
 
 #define X_IN_OFF 1
 #define Y_IN_OFF (X_DIM)
-#define Z_IN_OFF (X_IN_OFF * Y_IN_OFF)
+#define Z_IN_OFF (X_DIM * Y_DIM)
 
 #define X_OUT_OFF 1
 #define Y_OUT_OFF (Y_IN_OFF / 2)
@@ -50,29 +50,39 @@ int8_t choose7_2[] = {
 };
 
 
-void downsample(uint8_t* input, uint8_t* output) {
+void downsample(uint16_t* input, uint16_t* output) {
     
-    uint8_t vals[8]; 
-    uint8_t choose4 = 0;
-    uint8_t choose3 = 0;
-    uint8_t choose2 = 0;
+    uint16_t vals[8]; 
+    uint16_t choose4 = 0;
+    uint16_t choose3 = 0;
+    uint16_t choose2 = 0;
 
-    uint8_t p,q,r,s;
+    uint16_t p,q,r,s;
 
     uint16_t i;
-    uint16_t o_i = 0;
+    uint16_t x, y, z;
+    uint32_t o_i = 0;
 
-    for (uint16_t x = 0; x < X_DIM; x += 2) {
-        for (uint16_t y = 0; y < Y_DIM; y += 2) {
-            for (uint16_t z = 0; z < Z_DIM; z += 2, o_i++) {
-                vals[0] = input[ x + Y_IN_OFF * y + Z_IN_OFF * z ];
-                vals[1] = input[ (x+1) + Y_IN_OFF * y + Z_IN_OFF * z ];
-                vals[2] = input[ x + Y_IN_OFF * (y+1) + Z_IN_OFF * z ];
-                vals[3] = input[ (x+1) + Y_IN_OFF * (y+1) + Z_IN_OFF * z ];
-                vals[4] = input[ x + Y_IN_OFF * y + Z_IN_OFF * (z+1) ];
-                vals[5] = input[ (x+1) + Y_IN_OFF * y + Z_IN_OFF * (z+1) ];
-                vals[6] = input[ x + Y_IN_OFF * (y+1) + Z_IN_OFF * (z+1) ];
-                vals[7] = input[ (x+1) + Y_IN_OFF * (y+1) + Z_IN_OFF * (z+1) ];
+    uint16_t x1, y0, y1, z0, z1;
+
+    for (z = 0; z < Z_DIM; z += 2) {   
+        for (y = 0; y < Y_DIM; y += 2) {
+            for (x = 0; x < X_DIM; x += 2) {
+        
+                y0 = y * Y_IN_OFF;
+                z0 = z * Z_IN_OFF;
+                x1 = x+1;
+                y1 = (y+1) * Y_IN_OFF;
+                z1 = (z+1) * Z_IN_OFF;
+
+                vals[0] = input[ x + y0 + z0 ] + 1;
+                vals[1] = input[ x1 + y0 + z0 ] + 1;
+                vals[2] = input[ x + y1 + z0 ] + 1;
+                vals[3] = input[ x1 + y1 + z0 ] + 1;
+                vals[4] = input[ x + y0 + z1 ] + 1;
+                vals[5] = input[ x1 + y0 + z1 ] + 1;
+                vals[6] = input[ x + y1 + z1 ] + 1;
+                vals[7] = input[ x1 + y1 + z1 ] + 1;
 
                 // 8C4
                 for (i = 0; i < 70 * 4; i += 4) {
@@ -81,7 +91,7 @@ void downsample(uint8_t* input, uint8_t* output) {
                     r = vals[choose8_4[i + 2]];
                     s = vals[choose8_4[i + 3]];
 
-                    p = p * ( (p == q) & (q == r) & (r == s) );
+                    p = p * (uint16_t)( (p == q) & (q == r) & (r == s) ); // PICK(P,Q,R,S)
                     choose4 = choose4 + (choose4 == 0) * p;
                 }
 
@@ -91,7 +101,7 @@ void downsample(uint8_t* input, uint8_t* output) {
                     q = vals[choose8_3[i + 1]];
                     r = vals[choose8_3[i + 2]];
 
-                    p = p * ( (p == q) & (q == r) );
+                    p = p * ( (p == q) & (q == r) ); // PICK(P,Q,R)
                     choose3 = choose3 + (choose3 == 0) * p;
                 }
 
@@ -100,13 +110,14 @@ void downsample(uint8_t* input, uint8_t* output) {
                     p = vals[choose8_3[i + 0]];
                     q = vals[choose8_3[i + 1]];
 
-                    p = p * (p == q);
-                    choose2 = choose2 + (choose2 == 0) * p;
+                    p = p * (p == q); // PICK(P,Q)
+                    choose2 = choose2 + (choose2 == 0) * p; // Logical OR
                 }
 
+                o_i = (x >> 1) + (y >> 1) * Y_OUT_OFF + (z >> 1) * Z_OUT_OFF;
                 output[o_i] = choose4 + (choose4 == 0) * choose3;
                 output[o_i] = output[o_i] + (output[o_i] == 0) * choose2;
-                output[o_i] = output[o_i] + (output[o_i] == 0) * vals[7];
+                output[o_i] = output[o_i] + (output[o_i] == 0) * vals[7] - 1;
             }
         }
     }
@@ -114,50 +125,50 @@ void downsample(uint8_t* input, uint8_t* output) {
 
 
 int main(int argc, char **argv) {
-    // if (argc < 2) {
-    //     printf("error, missing path to input");
-    //     return -1;
-    // }
+    if (argc < 2) {
+        printf("error, missing path to input");
+        return -1;
+    }
 
     clock_t startT, endT;
 
     printf("start %lu\n", sizeof(int));
 
-    uint8_t* input = (uint8_t*)malloc(VOX_COUNT * sizeof(uint8_t));
-    uint8_t* output = (uint8_t*)malloc(DS_VOX_COUNT * sizeof(uint8_t));
+    uint16_t* input = (uint16_t*)malloc(VOX_COUNT * sizeof(uint16_t));
+    uint16_t* output = (uint16_t*)malloc(DS_VOX_COUNT * sizeof(uint16_t));
 
     printf("allocated arrays\n");
 
-    // FILE *readPtr = fopen(argv[1], "rb");
-    // startT = clock();
-    // fread(input, sizeof(uint8_t), VOX_COUNT, readPtr);
-    // endT = clock();
-    float sec;// = (endT - startT) / (float)CLOCKS_PER_SEC;
-    // printf("finished reading!, time: %f\n", sec);
-    // fclose(readPtr);
+    FILE *readPtr = fopen(argv[1], "rb");
+    startT = clock();
+    fread(input, sizeof(uint16_t), VOX_COUNT, readPtr);
+    endT = clock();
+    float sec = (endT - startT) / (float)CLOCKS_PER_SEC;
+    printf("finished reading!, time: %f\n", sec);
+    fclose(readPtr);
 
-    
-    int multipler = 10;
-    float acc = 0;
-    for (int j = 0; j < 2; j++) {
+
+    printf("MVx/sec\tsec;\tMVx = %d\n", VOX_COUNT);
+
+    int minibatch = 1;
+    for (int i = 0; i < 1; i++) {
         startT = clock();
-        for (int i = 0; i < multipler; i++) {
-            downsample(input, output);
+        for (int j = 0; j < minibatch; j++) {
+            downsample(input, output);    
         }
         endT = clock();
         sec = (endT - startT) / (float)CLOCKS_PER_SEC;
-        float cur = VOX_COUNT / (1000000) / sec * (float)multipler;
-        acc += cur;
-        printf("MV/sec time: %f\n", acc / (j + 1));
+        float mvxs = VOX_COUNT / (1024.0 * 1024.0) / sec * (float)minibatch;
+        printf("%.2f\t%.2f\n", mvxs, sec);
     }
     
-
     free(input);
 
     FILE *writePtr;
-    writePtr = fopen("output.bin","wb");
-    fwrite(output, sizeof(uint8_t), DS_VOX_COUNT, writePtr);
+    writePtr = fopen("output.raw","wb");
+    fwrite(output, sizeof(uint16_t), DS_VOX_COUNT, writePtr);
     fclose(writePtr);
+    printf("Wrote output.raw\n");
 
     free(output);
     return 0;
