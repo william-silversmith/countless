@@ -362,8 +362,8 @@ def benchmark():
     downsample_with_max_pooling,
     ndzoom,
     striding,
-    countless_if,
-    counting,
+    # countless_if,
+    # counting,
   ]
 
   formats = {

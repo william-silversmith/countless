@@ -137,7 +137,7 @@ def countless3d(data):
 
   # shift zeros up one so they don't interfere with bitwise operators
   # we'll shift down at the end
-  data = data + 1 
+  data += 1 
   
   # This loop splits the 2D array apart into four arrays that are
   # all the result of striding by 2 and offset by (0,0), (0,1), (1,0), 
@@ -162,7 +162,9 @@ def countless3d(data):
   results2 = ( p2(x,y) for x,y in combinations(sections[:-1], 2)  )
   results2 = reduce(lor, results2)
 
-  return reduce(lor, (results4, results3, results2, sections[-1])) - 1
+  final_result = reduce(lor, (results4, results3, results2, sections[-1])) - 1
+  data -= 1
+  return final_result
 
 def countless_generalized(data, factor):
   assert len(data.shape) == len(factor)
@@ -172,7 +174,7 @@ def countless_generalized(data, factor):
   mode_of = reduce(lambda x,y: x * y, factor)
   majority = int(math.ceil(float(mode_of) / 2))
 
-  data = data + 1
+  data += 1
   
   # This loop splits the 2D array apart into four arrays that are
   # all the result of striding by 2 and offset by (0,0), (0,1), (1,0), 
@@ -200,7 +202,9 @@ def countless_generalized(data, factor):
   partial_result = reduce(logical_or, partial_result)
   result = logical_or(result, partial_result)
 
-  return logical_or(result, sections[-1]) - 1
+  result = logical_or(result, sections[-1]) - 1
+  data -= 1
+  return result
 
 def dynamic_countless_generalized(data, factor):
   assert len(data.shape) == len(factor)
@@ -254,6 +258,54 @@ def dynamic_countless_generalized(data, factor):
   data -= 1
   return final_result
 
+def downsample_with_averaging(array):
+  """
+  Downsample x by factor using averaging.
+
+  @return: The downsampled array, of the same type as x.
+  """
+  factor = (2,2,2)
+  
+  if np.array_equal(factor[:3], np.array([1,1,1])):
+    return array
+
+  output_shape = tuple(int(math.ceil(s / f)) for s, f in zip(array.shape, factor))
+  temp = np.zeros(output_shape, float)
+  counts = np.zeros(output_shape, np.int)
+  for offset in np.ndindex(factor):
+      part = array[tuple(np.s_[o::f] for o, f in zip(offset, factor))]
+      indexing_expr = tuple(np.s_[:s] for s in part.shape)
+      temp[indexing_expr] += part
+      counts[indexing_expr] += 1
+  return np.cast[array.dtype](temp / counts)
+
+def downsample_with_max_pooling(array):
+
+  factor = (2,2,2)
+
+  sections = []
+
+  for offset in np.ndindex(factor):
+    part = array[tuple(np.s_[o::f] for o, f in zip(offset, factor))]
+    sections.append(part)
+
+  output = sections[0].copy()
+
+  for section in sections[1:]:
+    np.maximum(output, section, output)
+
+  return output
+
+def striding(array): 
+  """Downsample x by factor using striding.
+
+  @return: The downsampled array, of the same type as x.
+  """
+  factor = (2,2,2)
+  if np.all(np.array(factor, int) == 1):
+    return array
+  return array[tuple(np.s_[::f] for f in factor)]
+
 def benchmark():
   def countless3d_generalized(img):
     return countless_generalized(img, (2,2,2))
@@ -265,6 +317,9 @@ def benchmark():
     dynamic_countless3d,
     countless3d_generalized,
     countless3d_dynamic_generalized,
+    striding,
+    downsample_with_averaging,
+    downsample_with_max_pooling
   ]
 
   data = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
@@ -288,12 +343,14 @@ def benchmark():
 if __name__ == '__main__':
   benchmark()
 
-# Some results:
-# Function                         MPx     MB/sec  Sec   ; N=5
-# countless3d                      10.983  10.983  58.27
-# dynamic_countless3d              24.522  24.522  26.10
-# countless3d_generalized          10.671  10.671  59.98
-# countless3d_dynamic_generalized  25.280  25.280  25.32
+# Algorithm MPx MB/sec  Sec N=5
+# countless3d 10.564  10.564  60.58
+# dynamic_countless3d 22.717  22.717  28.17
+# countless3d_generalized 9.702 9.702 65.96
+# countless3d_dynamic_generalized 22.720  22.720  28.17
+# striding  253360.506  253360.506  0.00
+# downsample_with_averaging 224.098 224.098 2.86
+# downsample_with_max_pooling 690.474 690.474 0.93
 
 
 
