@@ -10,7 +10,7 @@ COUNTLESS N: Downsample by any factor. Watch your memory consumption.
 
 Read more:  
 COUNTLESS 2D: https://medium.com/@willsilversmith/countless-high-performance-2x-downsampling-of-labeled-images-using-numpy-e70ad3275589  
-COUNTLESS 3D: coming soon
+COUNTLESS 3D: https://medium.com/@willsilversmith/countless-3d-vectorized-2x-downsampling-of-labeled-volume-images-using-python-and-numpy-59d686c2f75
 
 
 ## Acknowledgments
