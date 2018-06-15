@@ -308,21 +308,21 @@ def striding(array):
 
 def benchmark():
   def countless3d_generalized(img):
-    return countless_generalized(img, (2,2,2))
+    return countless_generalized(img, (2,8,1))
   def countless3d_dynamic_generalized(img):
-    return dynamic_countless_generalized(img, (2,2,2))
+    return dynamic_countless_generalized(img, (8,8,1))
 
   methods = [
-    countless3d,
-    dynamic_countless3d,
+    # countless3d,
+    # dynamic_countless3d,
     countless3d_generalized,
-    countless3d_dynamic_generalized,
-    striding,
-    downsample_with_averaging,
-    downsample_with_max_pooling
+    # countless3d_dynamic_generalized,
+    # striding,
+    # downsample_with_averaging,
+    # downsample_with_max_pooling
   ]
 
-  data = np.zeros(shape=(512, 512, 512), dtype=np.uint8) + 1
+  data = np.zeros(shape=(16**2, 16**2, 16**2), dtype=np.uint8) + 1
 
   N = 5
 

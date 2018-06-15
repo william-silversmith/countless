@@ -9,6 +9,8 @@ python countless2d.py ./images/NAMEOFIMAGE
 import six
 from six.moves import range
 from collections import defaultdict
+from functools import reduce
+import operator 
 import io
 import os
 from PIL import Image
@@ -73,6 +75,37 @@ def quick_countless(data):
   
   return a + (a == 0) * d # AB || AC || BC || D
 
+def nonzero_inflating_countless(data):
+  """
+  Vectorized implementation of downsampling a 2D 
+  image by 2 on each side using the COUNTLESS algorithm
+  that treats zero as "background" and inflates lone
+  pixels.
+  
+  data is a 2D numpy array with even dimensions.
+  """
+  sections = []
+  
+  # This loop splits the 2D array apart into four arrays that are
+  # all the result of striding by 2 and offset by (0,0), (0,1), (1,0), 
+  # and (1,1) representing the A, B, C, and D positions from Figure 1.
+  factor = (2,2)
+  for offset in np.ndindex(factor):
+    part = data[tuple(np.s_[o::f] for o, f in zip(offset, factor))]
+    sections.append(part)
+
+  a, b, c, d = sections
+
+  coeff_b = b + (b == 0) * (a + (a == 0) * c)
+  coeff_a = a + (a == 0) * coeff_b
+
+  ab_ac = coeff_a * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
+  bc = coeff_b * (b == c) # PICK(B,C)
+
+  a = ab_ac | bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)
+
+  return a + (a == 0) * d # AB || AC || BC || D
+
 def zero_corrected_countless(data):
   """
   Vectorized implementation of downsampling a 2D 
@@ -116,6 +149,23 @@ def zero_corrected_countless(data):
   data -= 1
 
   return result
+
+def countless_extreme(data):
+  nonzeros = np.count_nonzero(data)
+  # print("nonzeros", nonzeros)
+
+  N = reduce(operator.mul, data.shape)
+
+  if nonzeros == N:
+    print("quick")
+    return quick_countless(data)
+  elif np.count_nonzero(data + 1) == N:
+    print("quick")
+    # print("upper", nonzeros)
+    return quick_countless(data)
+  else:
+    return countless(data)
+
 
 def countless(data):
   """
@@ -354,14 +404,15 @@ def benchmark():
   data = data.reshape(reshape).astype(np.uint8)
 
   methods = [
-    simplest_countless,
-    quick_countless,
-    zero_corrected_countless,
-    countless,
-    downsample_with_averaging,
-    downsample_with_max_pooling,
-    ndzoom,
-    striding,
+    # simplest_countless,
+    # quick_countless,
+    # zero_corrected_countless,
+    # countless,
+    countless_extreme,
+    # downsample_with_averaging,
+    # downsample_with_max_pooling,
+    # ndzoom,
+    # striding,
     # countless_if,
     # counting,
   ]
@@ -375,7 +426,7 @@ def benchmark():
   if not os.path.exists('./results'):
     os.mkdir('./results')
 
-  N = 1000
+  N = 200
   img_size = float(img.width * img.height) / 1024.0 / 1024.0
   print("N = %d, %dx%d (%.2f MPx) %d chan, %s" % (N, img.width, img.height, img_size, n_channels, filename))
   print("Algorithm\tMPx/sec\tMB/sec\tSec")

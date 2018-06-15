@@ -36,6 +36,9 @@ def test_countless2d():
 
   test_all_cases(countless2d.simplest_countless, False)
   test_all_cases(countless2d.quick_countless, False)
+  test_all_cases(countless2d.nonzero_inflating_countless, False)
+
+
 
   methods = [
     countless2d.zero_corrected_countless,
@@ -48,6 +51,32 @@ def test_countless2d():
     print(fn.__name__)
     test_all_cases(fn, True)
 
+def test_nonzero_inflating_countless2d():
+  case1 = np.array([ [ 0, 2 ], [ 3, 4 ] ]).reshape((2,2,1,1)) # all different
+  case2 = np.array([ [ 0, 0 ], [ 3, 4 ] ]).reshape((2,2,1,1)) # all different
+  case3 = np.array([ [ 0, 0 ], [ 0, 4 ] ]).reshape((2,2,1,1)) # all different
+  case4 = np.array([ [ 1, 0 ], [ 0, 0 ] ]).reshape((2,2,1,1)) # all different
+  case5 = np.array([ [ 1, 0 ], [ 0, 4 ] ]).reshape((2,2,1,1)) # all different
+  case6 = np.array([ [ 0, 0 ], [ 1, 1 ] ]).reshape((2,2,1,1)) # all different
+  case7 = np.array([ [ 0, 1 ], [ 1, 0 ] ]).reshape((2,2,1,1)) # all different
+  case8 = np.array([ [ 1, 1 ], [ 0, 0 ] ]).reshape((2,2,1,1)) # all different
+  case9 = np.array([ [ 0, 0 ], [ 0, 0 ] ]).reshape((2,2,1,1)) # all different
+  case10 = np.array([ [ 0, 0 ], [ 3, 0 ] ]).reshape((2,2,1,1)) # all different
+
+  test = countless2d.nonzero_inflating_countless
+
+  assert test(case1) == [[[[4]]]] # d
+  assert test(case2) == [[[[3]]]] # c b/c a==b are zero
+  assert test(case3) == [[[[4]]]] # d is only nonzero
+  assert test(case4) == [[[[1]]]] # a
+  assert test(case5) == [[[[1]]]] # a
+  assert test(case6) == [[[[1]]]]  
+  assert test(case7) == [[[[1]]]]  
+  assert test(case8) == [[[[1]]]]  
+  assert test(case9) == [[[[0]]]] # allzeros
+  assert test(case10) == [[[[3]]]]  
+
+    
 def test_countless3d():
   def test_all_cases(fn):
     alldifferent = [
