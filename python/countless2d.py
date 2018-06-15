@@ -96,11 +96,10 @@ def nonzero_inflating_countless(data):
 
   a, b, c, d = sections
 
-  coeff_b = b + (b == 0) * (a + (a == 0) * c)
-  coeff_a = a + (a == 0) * coeff_b
+  coeff = b + (b == 0) * (a + (a == 0) * c)
 
-  ab_ac = coeff_a * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
-  bc = coeff_b * (b == c) # PICK(B,C)
+  ab_ac = coeff * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
+  bc = coeff * (b == c) # PICK(B,C)
 
   a = ab_ac | bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)
 
@@ -404,15 +403,15 @@ def benchmark():
   data = data.reshape(reshape).astype(np.uint8)
 
   methods = [
-    # simplest_countless,
-    # quick_countless,
-    # zero_corrected_countless,
-    # countless,
-    countless_extreme,
-    # downsample_with_averaging,
-    # downsample_with_max_pooling,
-    # ndzoom,
-    # striding,
+    simplest_countless,
+    quick_countless,
+    nonzero_inflating_countless,
+    zero_corrected_countless,
+    countless,
+    downsample_with_averaging,
+    downsample_with_max_pooling,
+    ndzoom,
+    striding,
     # countless_if,
     # counting,
   ]
