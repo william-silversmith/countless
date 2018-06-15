@@ -96,10 +96,12 @@ def nonzero_inflating_countless(data):
 
   a, b, c, d = sections
 
-  coeff = b + (b == 0) * (a + (a == 0) * c)
+  bzero = (b == 0)
+  coeff_a = a + (a == 0) * (b + bzero * c)
+  coeff_b = b + bzero * a
 
-  ab_ac = coeff * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
-  bc = coeff * (b == c) # PICK(B,C)
+  ab_ac = coeff_a * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
+  bc = coeff_b * (b == c) # PICK(B,C)
 
   a = ab_ac | bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)
 

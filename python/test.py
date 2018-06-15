@@ -52,16 +52,17 @@ def test_countless2d():
     test_all_cases(fn, True)
 
 def test_nonzero_inflating_countless2d():
-  case1 = np.array([ [ 0, 2 ], [ 3, 4 ] ]).reshape((2,2,1,1)) # all different
-  case2 = np.array([ [ 0, 0 ], [ 3, 4 ] ]).reshape((2,2,1,1)) # all different
-  case3 = np.array([ [ 0, 0 ], [ 0, 4 ] ]).reshape((2,2,1,1)) # all different
-  case4 = np.array([ [ 1, 0 ], [ 0, 0 ] ]).reshape((2,2,1,1)) # all different
-  case5 = np.array([ [ 1, 0 ], [ 0, 4 ] ]).reshape((2,2,1,1)) # all different
-  case6 = np.array([ [ 0, 0 ], [ 1, 1 ] ]).reshape((2,2,1,1)) # all different
-  case7 = np.array([ [ 0, 1 ], [ 1, 0 ] ]).reshape((2,2,1,1)) # all different
-  case8 = np.array([ [ 1, 1 ], [ 0, 0 ] ]).reshape((2,2,1,1)) # all different
-  case9 = np.array([ [ 0, 0 ], [ 0, 0 ] ]).reshape((2,2,1,1)) # all different
-  case10 = np.array([ [ 0, 0 ], [ 3, 0 ] ]).reshape((2,2,1,1)) # all different
+  case1 = np.array([ [ 0, 2 ], [ 3, 4 ] ]).reshape((2,2,1,1)) 
+  case2 = np.array([ [ 0, 0 ], [ 3, 4 ] ]).reshape((2,2,1,1)) 
+  case3 = np.array([ [ 0, 0 ], [ 0, 4 ] ]).reshape((2,2,1,1)) 
+  case4 = np.array([ [ 1, 0 ], [ 0, 0 ] ]).reshape((2,2,1,1)) 
+  case5 = np.array([ [ 1, 0 ], [ 0, 4 ] ]).reshape((2,2,1,1)) 
+  case6 = np.array([ [ 0, 0 ], [ 1, 1 ] ]).reshape((2,2,1,1)) 
+  case7 = np.array([ [ 0, 1 ], [ 1, 0 ] ]).reshape((2,2,1,1)) 
+  case8 = np.array([ [ 1, 1 ], [ 0, 0 ] ]).reshape((2,2,1,1)) 
+  case9 = np.array([ [ 0, 0 ], [ 0, 0 ] ]).reshape((2,2,1,1)) 
+  case10 = np.array([ [ 0, 0 ], [ 3, 0 ] ]).reshape((2,2,1,1)) 
+  case11 = np.array([ [ 1, 2 ], [ 1, 4 ] ]).reshape((2,2,1,1)) 
 
   test = countless2d.nonzero_inflating_countless
 
@@ -75,6 +76,7 @@ def test_nonzero_inflating_countless2d():
   assert test(case8) == [[[[1]]]]  
   assert test(case9) == [[[[0]]]] # allzeros
   assert test(case10) == [[[[3]]]]  
+  assert test(case11) == [[[[1]]]]  
 
     
 def test_countless3d():
