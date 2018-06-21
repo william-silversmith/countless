@@ -96,15 +96,12 @@ def nonzero_inflating_countless(data):
 
   a, b, c, d = sections
 
-  bzero = (b == 0)
-  nonzero = a + (a == 0) * (b + bzero * c)
-  b_or_a = b + bzero * a
-  
-  ab_ac = nonzero * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
-  bc = b_or_a * (b == c) # PICK(B,C)
+  ab_ac = a * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
+  bc = b * (b == c) # PICK(B,C)
 
   abc = ab_ac | bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)
 
+  nonzero = a + (a == 0) * (b + (b == 0) * c)
   return abc + (abc == 0) * (d + (d == 0) * nonzero) # AB || AC || BC || D
 
 def zero_corrected_countless(data):
@@ -427,11 +424,14 @@ def benchmark():
   if not os.path.exists('./results'):
     os.mkdir('./results')
 
-  N = 200
+  N = 500
   img_size = float(img.width * img.height) / 1024.0 / 1024.0
   print("N = %d, %dx%d (%.2f MPx) %d chan, %s" % (N, img.width, img.height, img_size, n_channels, filename))
   print("Algorithm\tMPx/sec\tMB/sec\tSec")
   for fn in methods:
+    print(fn.__name__, end='')
+    sys.stdout.flush()
+
     start = time.time()
     # tqdm is here to show you what's going on the first time you run it.
     # Feel free to remove it to get slightly more accurate timing results.
