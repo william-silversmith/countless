@@ -52,32 +52,62 @@ def test_countless2d():
     test_all_cases(fn, True)
 
 def test_nonzero_inflating_countless2d():
-  case1 = np.array([ [ 0, 2 ], [ 3, 4 ] ]).reshape((2,2,1,1)) 
-  case2 = np.array([ [ 0, 0 ], [ 3, 4 ] ]).reshape((2,2,1,1)) 
-  case3 = np.array([ [ 0, 0 ], [ 0, 4 ] ]).reshape((2,2,1,1)) 
-  case4 = np.array([ [ 1, 0 ], [ 0, 0 ] ]).reshape((2,2,1,1)) 
-  case5 = np.array([ [ 1, 0 ], [ 0, 4 ] ]).reshape((2,2,1,1)) 
-  case6 = np.array([ [ 0, 0 ], [ 1, 1 ] ]).reshape((2,2,1,1)) 
-  case7 = np.array([ [ 0, 1 ], [ 1, 0 ] ]).reshape((2,2,1,1)) 
-  case8 = np.array([ [ 1, 1 ], [ 0, 0 ] ]).reshape((2,2,1,1)) 
-  case9 = np.array([ [ 0, 0 ], [ 0, 0 ] ]).reshape((2,2,1,1)) 
-  case10 = np.array([ [ 0, 0 ], [ 3, 0 ] ]).reshape((2,2,1,1)) 
-  case11 = np.array([ [ 1, 2 ], [ 1, 4 ] ]).reshape((2,2,1,1)) 
+  a = np.array([ [ 1, 2 ], [ 3, 4 ] ]).reshape((2,2,1,1)) 
+  b = np.array([ [ 0, 2 ], [ 3, 4 ] ]).reshape((2,2,1,1)) 
+  c = np.array([ [ 1, 0 ], [ 3, 4 ] ]).reshape((2,2,1,1)) 
+  d = np.array([ [ 1, 2 ], [ 0, 4 ] ]).reshape((2,2,1,1)) 
+  e = np.array([ [ 1, 2 ], [ 3, 0 ] ]).reshape((2,2,1,1)) 
+  f = np.array([ [ 0, 0 ], [ 3, 4 ] ]).reshape((2,2,1,1)) 
+  g = np.array([ [ 0, 2 ], [ 0, 4 ] ]).reshape((2,2,1,1)) 
+  h = np.array([ [ 0, 2 ], [ 3, 0 ] ]).reshape((2,2,1,1)) 
+  i = np.array([ [ 1, 0 ], [ 0, 4 ] ]).reshape((2,2,1,1)) 
+  j = np.array([ [ 1, 2 ], [ 0, 0 ] ]).reshape((2,2,1,1)) 
+  k = np.array([ [ 1, 0 ], [ 3, 0 ] ]).reshape((2,2,1,1)) 
+  l = np.array([ [ 1, 0 ], [ 0, 0 ] ]).reshape((2,2,1,1)) 
+  m = np.array([ [ 0, 2 ], [ 0, 0 ] ]).reshape((2,2,1,1)) 
+  n = np.array([ [ 0, 0 ], [ 3, 0 ] ]).reshape((2,2,1,1)) 
+  o = np.array([ [ 0, 0 ], [ 0, 4 ] ]).reshape((2,2,1,1)) 
+  z = np.array([ [ 0, 0 ], [ 0, 0 ] ]).reshape((2,2,1,1)) 
 
   test = countless2d.nonzero_inflating_countless
 
-  assert test(case1) == [[[[4]]]] # d
-  assert test(case2) == [[[[3]]]] # c b/c a==b are zero
-  assert test(case3) == [[[[4]]]] # d is only nonzero
-  assert test(case4) == [[[[1]]]] # a
-  assert test(case5) == [[[[1]]]] # a
-  assert test(case6) == [[[[1]]]]  
-  assert test(case7) == [[[[1]]]]  
-  assert test(case8) == [[[[1]]]]  
-  assert test(case9) == [[[[0]]]] # allzeros
-  assert test(case10) == [[[[3]]]]  
-  assert test(case11) == [[[[1]]]]  
+  # Note: We only tested non-matching cases above,
+  # cases f,g,h,i,j,k prove their duals work as well
+  # b/c if two pixels are black, either one can be chosen
+  # if they are different or the same.
 
+  assert test(a) == [[[[4]]]] 
+  assert test(b) == [[[[4]]]] 
+  assert test(c) == [[[[4]]]] 
+  assert test(d) == [[[[4]]]] 
+  assert test(e) == [[[[1]]]] 
+  assert test(f) == [[[[3]]]]  
+  assert test(g) == [[[[2]]]]  
+  assert test(h) == [[[[2]]]]  
+  assert test(i) == [[[[1]]]] 
+  assert test(j) == [[[[1]]]]  
+  assert test(k) == [[[[1]]]]  
+  assert test(l) == [[[[1]]]]  
+  assert test(m) == [[[[2]]]]  
+  assert test(n) == [[[[3]]]]  
+  assert test(o) == [[[[4]]]]  
+  assert test(z) == [[[[0]]]]  
+
+  bc = np.array([ [ 0, 2 ], [ 2, 4 ] ]).reshape((2,2,1,1)) 
+  bd = np.array([ [ 0, 2 ], [ 3, 2 ] ]).reshape((2,2,1,1)) 
+  cd = np.array([ [ 0, 2 ], [ 3, 3 ] ]).reshape((2,2,1,1)) 
+  
+  assert test(bc) == [[[[2]]]]
+  assert test(bd) == [[[[2]]]]
+  assert test(cd) == [[[[3]]]]
+
+  ab = np.array([ [ 1, 1 ], [ 0, 4 ] ]).reshape((2,2,1,1)) 
+  ac = np.array([ [ 1, 2 ], [ 1, 0 ] ]).reshape((2,2,1,1)) 
+  ad = np.array([ [ 1, 0 ], [ 3, 1 ] ]).reshape((2,2,1,1)) 
+
+  assert test(ab) == [[[[1]]]]
+  assert test(ac) == [[[[1]]]]
+  assert test(ad) == [[[[1]]]]
     
 def test_countless3d():
   def test_all_cases(fn):

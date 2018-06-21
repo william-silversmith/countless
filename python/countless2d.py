@@ -97,15 +97,15 @@ def nonzero_inflating_countless(data):
   a, b, c, d = sections
 
   bzero = (b == 0)
-  coeff_a = a + (a == 0) * (b + bzero * c)
-  coeff_b = b + bzero * a
+  nonzero = a + (a == 0) * (b + bzero * c)
+  b_or_a = b + bzero * a
+  
+  ab_ac = nonzero * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
+  bc = b_or_a * (b == c) # PICK(B,C)
 
-  ab_ac = coeff_a * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
-  bc = coeff_b * (b == c) # PICK(B,C)
+  abc = ab_ac | bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)
 
-  a = ab_ac | bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)
-
-  return a + (a == 0) * d # AB || AC || BC || D
+  return abc + (abc == 0) * (d + (d == 0) * nonzero) # AB || AC || BC || D
 
 def zero_corrected_countless(data):
   """
