@@ -36,7 +36,7 @@ def test_countless2d():
 
   test_all_cases(countless2d.simplest_countless, False)
   test_all_cases(countless2d.quick_countless, False)
-  test_all_cases(countless2d.nonzero_inflating_countless, False)
+  test_all_cases(countless2d.stippled_countless, False)
 
 
 
@@ -51,7 +51,7 @@ def test_countless2d():
     print(fn.__name__)
     test_all_cases(fn, True)
 
-def test_nonzero_inflating_countless2d():
+def test_stippled_countless2d():
   a = np.array([ [ 1, 2 ], [ 3, 4 ] ]).reshape((2,2,1,1)) 
   b = np.array([ [ 0, 2 ], [ 3, 4 ] ]).reshape((2,2,1,1)) 
   c = np.array([ [ 1, 0 ], [ 3, 4 ] ]).reshape((2,2,1,1)) 
@@ -69,7 +69,7 @@ def test_nonzero_inflating_countless2d():
   o = np.array([ [ 0, 0 ], [ 0, 4 ] ]).reshape((2,2,1,1)) 
   z = np.array([ [ 0, 0 ], [ 0, 0 ] ]).reshape((2,2,1,1)) 
 
-  test = countless2d.nonzero_inflating_countless
+  test = countless2d.stippled_countless
 
   # Note: We only tested non-matching cases above,
   # cases f,g,h,i,j,k prove their duals work as well
