@@ -75,7 +75,7 @@ def quick_countless(data):
   
   return a + (a == 0) * d # AB || AC || BC || D
 
-def nonzero_inflating_countless(data):
+def stippled_countless(data):
   """
   Vectorized implementation of downsampling a 2D 
   image by 2 on each side using the COUNTLESS algorithm
@@ -404,7 +404,7 @@ def benchmark():
   methods = [
     simplest_countless,
     quick_countless,
-    nonzero_inflating_countless,
+    stippled_countless,
     zero_corrected_countless,
     countless,
     downsample_with_averaging,
