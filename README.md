@@ -4,6 +4,7 @@
 Code and performance tests to demonstrate the COUNTLESS algorithm, a method for downsampling image labels based on taking the mode of small image patches to perform 2x2 and 2x2x2 downsampling. This algorithm works very well with vectorized instructions. It was originally designed to work around the weakness of Python's looping speed by taking advantage of numpy operators.  
 
 COUNTLESS 2D: Downsample an image 2x2  
+COUNTLESS 2D Inflated: Downsample an image 2x2 holding black as background
 COUNTLESS 3D: Downsample an image 2x2x2  
 COUNTLESS N: Downsample by any factor. Watch your memory consumption.  
 
