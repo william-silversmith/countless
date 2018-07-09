@@ -119,9 +119,7 @@ def stippled_countless(data):
   a, b, c, d = sections
 
   ab_ac = a * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
-  bc = b * (b == c) # PICK(B,C)
-
-  ab_ac |= bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)
+  ab_ac |= b * (b == c) # PICK(B,C)
 
   nonzero = a + (a == 0) * (b + (b == 0) * c)
   return ab_ac + (ab_ac == 0) * (d + (d == 0) * nonzero) # AB || AC || BC || D
@@ -215,9 +213,7 @@ def countless(data):
   a, b, c, d = sections
 
   ab_ac = a * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
-  bc = b * (b == c) # PICK(B,C)
-
-  ab_ac |= bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)
+  ab_ac |= b * (b == c) # PICK(B,C)
   result = ab_ac + (ab_ac == 0) * d - 1 # (matches or d) - 1
 
   if upgraded:
@@ -424,16 +420,16 @@ def benchmark():
   data = data.reshape(reshape).astype(np.uint8)
 
   methods = [
-    # simplest_countless,
+    simplest_countless,
     quick_countless,
     quickest_countless,
-    # stippled_countless,
-    # zero_corrected_countless,
-    # countless,
-    # downsample_with_averaging,
-    # downsample_with_max_pooling,
-    # ndzoom,
-    # striding,
+    stippled_countless,
+    zero_corrected_countless,
+    countless,
+    downsample_with_averaging,
+    downsample_with_max_pooling,
+    ndzoom,
+    striding,
     # countless_if,
     # counting,
   ]
@@ -490,18 +486,19 @@ if __name__ == '__main__':
 # counting                          0.117     0.117   42.85
 
 # Run without non-numpy implementations:
-# N = 1000, 1024x1024 (1.00 MPx) 1 chan, images/gray_segmentation.png
-# Algorithm                   MPx/sec     MB/sec    Sec
-# simplest_countless          776.806     776.806   1.29
-# quick_countless             871.373     871.373   1.15
-# quickest_countless          949.670     949.670   1.05
-# stippled_countless          543.601     543.601   1.84
-# zero_corrected_countless    578.798     578.798   1.73
-# countless                   638.386     638.386   1.57
-# downsample_with_averaging   389.192     389.192   2.57
-# downsample_with_max_pooling 972.765     972.765   1.03
-# ndzoom                      161.834     161.834   6.18
-# striding                  78954.577   78954.577   0.01
+# N = 2000, 1024x1024 (1.00 MPx) 1 chan, images/gray_segmentation.png
+# Algorithm                       MPx/sec   MB/sec     Sec
+# simplest_countless              800.522   800.522    2.50
+# quick_countless                 945.420   945.420    2.12
+# quickest_countless              947.256   947.256    2.11
+# stippled_countless              544.049   544.049    3.68
+# zero_corrected_countless        575.310   575.310    3.48
+# countless                       646.684   646.684    3.09
+# downsample_with_averaging       385.132   385.132    5.19
+# downsample_with_max_poolin      988.361   988.361    2.02
+# ndzoom                          163.104   163.104   12.26
+# striding                      81589.340 81589.340    0.02
+
 
 
 
