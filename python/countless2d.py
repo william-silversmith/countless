@@ -72,8 +72,32 @@ def quick_countless(data):
   bc = b * (b == c) # PICK(B,C)
 
   a = ab_ac | bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)
-  
   return a + (a == 0) * d # AB || AC || BC || D
+
+def quickest_countless(data):
+  """
+  Vectorized implementation of downsampling a 2D 
+  image by 2 on each side using the COUNTLESS algorithm.
+  
+  data is a 2D numpy array with even dimensions.
+  """
+  sections = []
+  
+  # This loop splits the 2D array apart into four arrays that are
+  # all the result of striding by 2 and offset by (0,0), (0,1), (1,0), 
+  # and (1,1) representing the A, B, C, and D positions from Figure 1.
+  factor = (2,2)
+  for offset in np.ndindex(factor):
+    part = data[tuple(np.s_[o::f] for o, f in zip(offset, factor))]
+    sections.append(part)
+
+  a, b, c, d = sections
+
+  ab_ac = a * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
+  bc = b * (b == c) # PICK(B,C)
+
+  ab_ac |= bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)  
+  return ab_ac + (ab_ac == 0) * d # AB || AC || BC || D
 
 def stippled_countless(data):
   """
@@ -195,8 +219,8 @@ def countless(data):
   ab_ac = a * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
   bc = b * (b == c) # PICK(B,C)
 
-  a = ab_ac | bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)
-  result = a + (a == 0) * d - 1 # (matches or d) - 1
+  ab_ac |= bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)
+  result = ab_ac + (ab_ac == 0) * d - 1 # (matches or d) - 1
 
   if upgraded:
     return downgrade_type(result)
@@ -404,6 +428,7 @@ def benchmark():
   methods = [
     simplest_countless,
     quick_countless,
+    quickest_countless,
     stippled_countless,
     zero_corrected_countless,
     countless,
@@ -424,7 +449,7 @@ def benchmark():
   if not os.path.exists('./results'):
     os.mkdir('./results')
 
-  N = 500
+  N = 1000
   img_size = float(img.width * img.height) / 1024.0 / 1024.0
   print("N = %d, %dx%d (%.2f MPx) %d chan, %s" % (N, img.width, img.height, img_size, n_channels, filename))
   print("Algorithm\tMPx/sec\tMB/sec\tSec")

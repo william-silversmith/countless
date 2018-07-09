@@ -36,6 +36,7 @@ def test_countless2d():
 
   test_all_cases(countless2d.simplest_countless, False)
   test_all_cases(countless2d.quick_countless, False)
+  test_all_cases(countless2d.quickest_countless, False)
   test_all_cases(countless2d.stippled_countless, False)
 
 
