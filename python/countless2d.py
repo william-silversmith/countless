@@ -94,9 +94,7 @@ def quickest_countless(data):
   a, b, c, d = sections
 
   ab_ac = a * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
-  bc = b * (b == c) # PICK(B,C)
-
-  ab_ac |= bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)  
+  ab_ac |= b * (b == c) # PICK(B,C)
   return ab_ac + (ab_ac == 0) * d # AB || AC || BC || D
 
 def stippled_countless(data):
@@ -123,10 +121,10 @@ def stippled_countless(data):
   ab_ac = a * ((a == b) | (a == c)) # PICK(A,B) || PICK(A,C) w/ optimization
   bc = b * (b == c) # PICK(B,C)
 
-  abc = ab_ac | bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)
+  ab_ac |= bc # (PICK(A,B) || PICK(A,C)) or PICK(B,C)
 
   nonzero = a + (a == 0) * (b + (b == 0) * c)
-  return abc + (abc == 0) * (d + (d == 0) * nonzero) # AB || AC || BC || D
+  return ab_ac + (ab_ac == 0) * (d + (d == 0) * nonzero) # AB || AC || BC || D
 
 def zero_corrected_countless(data):
   """
@@ -426,16 +424,16 @@ def benchmark():
   data = data.reshape(reshape).astype(np.uint8)
 
   methods = [
-    simplest_countless,
+    # simplest_countless,
     quick_countless,
     quickest_countless,
-    stippled_countless,
-    zero_corrected_countless,
-    countless,
-    downsample_with_averaging,
-    downsample_with_max_pooling,
-    ndzoom,
-    striding,
+    # stippled_countless,
+    # zero_corrected_countless,
+    # countless,
+    # downsample_with_averaging,
+    # downsample_with_max_pooling,
+    # ndzoom,
+    # striding,
     # countless_if,
     # counting,
   ]
@@ -449,7 +447,7 @@ def benchmark():
   if not os.path.exists('./results'):
     os.mkdir('./results')
 
-  N = 1000
+  N = 500
   img_size = float(img.width * img.height) / 1024.0 / 1024.0
   print("N = %d, %dx%d (%.2f MPx) %d chan, %s" % (N, img.width, img.height, img_size, n_channels, filename))
   print("Algorithm\tMPx/sec\tMB/sec\tSec")
