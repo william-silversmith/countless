@@ -491,4 +491,19 @@ if __name__ == '__main__':
 # countless_if                      4.377     4.377    1.14
 # counting                          0.117     0.117   42.85
 
+# Run without non-numpy implementations:
+# N = 1000, 1024x1024 (1.00 MPx) 1 chan, images/gray_segmentation.png
+# Algorithm                   MPx/sec     MB/sec    Sec
+# simplest_countless          776.806     776.806   1.29
+# quick_countless             871.373     871.373   1.15
+# quickest_countless          949.670     949.670   1.05
+# stippled_countless          543.601     543.601   1.84
+# zero_corrected_countless    578.798     578.798   1.73
+# countless                   638.386     638.386   1.57
+# downsample_with_averaging   389.192     389.192   2.57
+# downsample_with_max_pooling 972.765     972.765   1.03
+# ndzoom                      161.834     161.834   6.18
+# striding                  78954.577   78954.577   0.01
+
+
 
