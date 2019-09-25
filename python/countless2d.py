@@ -97,6 +97,30 @@ def quickest_countless(data):
   ab_ac |= b * (b == c) # PICK(B,C)
   return ab_ac + (ab_ac == 0) * d # AB || AC || BC || D
 
+def quick_countless_xor(data):
+  """
+  Vectorized implementation of downsampling a 2D 
+  image by 2 on each side using the COUNTLESS algorithm.
+  
+  data is a 2D numpy array with even dimensions.
+  """
+  sections = []
+  
+  # This loop splits the 2D array apart into four arrays that are
+  # all the result of striding by 2 and offset by (0,0), (0,1), (1,0), 
+  # and (1,1) representing the A, B, C, and D positions from Figure 1.
+  factor = (2,2)
+  for offset in np.ndindex(factor):
+    part = data[tuple(np.s_[o::f] for o, f in zip(offset, factor))]
+    sections.append(part)
+
+  a, b, c, d = sections
+
+  ab = a ^ (a ^ b) # a or b
+  ab += (ab != a) * ((ab ^ (ab ^ c)) - b) # b or c
+  ab += (ab == c) * ((ab ^ (ab ^ d)) - c) # c or d
+  return ab
+
 def stippled_countless(data):
   """
   Vectorized implementation of downsampling a 2D 
@@ -422,6 +446,7 @@ def benchmark():
   methods = [
     simplest_countless,
     quick_countless,
+    quick_countless_xor,
     quickest_countless,
     stippled_countless,
     zero_corrected_countless,
