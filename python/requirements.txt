@@ -1,5 +1,5 @@
-Pillow==6.2.0
-numpy==1.13.3
+Pillow>=6.2.0
+numpy>=1.16
 scipy
 tqdm
 memory_profiler
